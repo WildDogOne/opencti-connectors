@@ -102,12 +102,6 @@ class WildConnector:
                         + str(now)
                     )
                     self.helper.log_info(message)
-                    self.helper.set_state(
-                        {
-                            "last_run": now.timestamp(),
-                        }
-                    )
-                    time.sleep(self.interval)
 
                 if self.phishingarmy:
                     self.helper.log_info("Running Phishing Army connector")
@@ -132,12 +126,13 @@ class WildConnector:
                         + str(now)
                     )
                     self.helper.log_info(message)
-                    self.helper.set_state(
-                        {
-                            "last_run": now.timestamp(),
-                        }
-                    )
-                    time.sleep(self.interval)
+
+                self.helper.set_state(
+                    {
+                        "last_run": now.timestamp(),
+                    }
+                )
+                time.sleep(self.interval)
 
                 ##ips = self.get_ips(self.api_url)
                 ##observables = self.create_observables(ips)
