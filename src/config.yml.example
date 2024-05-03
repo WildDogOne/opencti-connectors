@@ -11,4 +11,5 @@ connector:
   update_existing_data: True
   log_level: 'info'
   openphish: True
+  phishingarmy: True
   interval: 360 # Required, in minutes

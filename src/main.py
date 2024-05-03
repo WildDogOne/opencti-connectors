@@ -39,6 +39,11 @@ class WildConnector:
             ["connector", "openphish"],
             config,
         )
+        self.phishingarmy = get_config_variable(
+            "CONNECTOR_PHISHINGARMY",
+            ["connector", "phishingarmy"],
+            config,
+        )
 
         self.interval = (
             get_config_variable(
@@ -76,7 +81,7 @@ class WildConnector:
                 # Run OpenPhish connector
                 if self.openphish:
                     self.helper.log_info("Running OpenPhish connector")
-                    openphish_urls = self.get_openphish()
+                    openphish_urls = self.get_txt(url="https://openphish.com/feed.txt")
                     observables = self.create_url_observables(
                         openphish_urls,
                         description="OpenPhish URLs",
@@ -86,6 +91,36 @@ class WildConnector:
                         observables,
                         description="OpenPhish URLs",
                         labels=["osint", "phishing", "openphish"],
+                    )
+                    relationships = self.create_relationships(observables, indicators)
+                    bundle = self.create_bundle(observables, indicators, relationships)
+                    self.send_bundle(bundle, work_id)
+                    message = (
+                        "Connector successfully run ("
+                        + str((len(indicators) + len(observables) + len(relationships)))
+                        + " events have been processed), storing last_run as "
+                        + str(now)
+                    )
+                    self.helper.log_info(message)
+                    self.helper.set_state(
+                        {
+                            "last_run": now.timestamp(),
+                        }
+                    )
+                    time.sleep(self.interval)
+
+                if self.phishingarmy:
+                    self.helper.log_info("Running Phishing Army connector")
+                    openphish_urls = self.get_txt(url="https://phishing.army/download/phishing_army_blocklist.txt")
+                    observables = self.create_url_observables(
+                        openphish_urls,
+                        description="Phishing Army URLs",
+                        labels=["osint", "phishing", "phishingarmy"],
+                    )
+                    indicators = self.create_url_indicators(
+                        observables,
+                        description="Phishing Army URLs",
+                        labels=["osint", "phishing", "phishingarmy"],
                     )
                     relationships = self.create_relationships(observables, indicators)
                     bundle = self.create_bundle(observables, indicators, relationships)
@@ -123,14 +158,14 @@ class WildConnector:
                 self.helper.log_error(str(exception))
                 time.sleep(self.interval)
 
-    def get_openphish(self, url="https://openphish.com/feed.txt"):
+    def get_txt(self, url="https://openphish.com/feed.txt"):
         """
         Retrieves response from provided URL and grabs URLs  from resulting HTML
 
         :param url: URL for list of URLs
         :return: :class:`List` of URLs
         """
-        self.helper.log_info("Getting OpenPhish URLs")
+        self.helper.log_info("Getting URLs from text file")
         response = requests.get(url)
         if response.ok:
             response_text = response.text
@@ -227,7 +262,7 @@ class WildConnector:
         self.helper.log_info("Creating STIX Indicators")
         indicators = []
         for observable in observables:
-            pattern = f"[Url:value = '{observable.value}']"
+            pattern = f"[url:value = '{observable.value}']"
             indicator = stix2.Indicator(
                 id=Indicator.generate_id(pattern),
                 name=observable.value,
