@@ -77,6 +77,7 @@ class WildConnector:
                 else:
                     self.helper.log_info("Connector has never run")
                 if self.openphish:
+                    self.helper.log_info("Running OpenPhish connector")
                     openphish_urls = self.get_openphish()
                     observables = self.create_url_observables(
                         openphish_urls,
@@ -91,6 +92,19 @@ class WildConnector:
                     relationships = self.create_relationships(observables, indicators)
                     bundle = self.create_bundle(observables, indicators, relationships)
                     self.send_bundle(bundle, work_id)
+                    message = (
+                        "Connector successfully run ("
+                        + str((len(indicators) + len(observables) + len(relationships)))
+                        + " events have been processed), storing last_run as "
+                        + str(now)
+                    )
+                    self.helper.log_info(message)
+                    self.helper.set_state(
+                        {
+                            "last_run": now.timestamp(),
+                        }
+                    )
+                    time.sleep(self.interval)
 
                 ##ips = self.get_ips(self.api_url)
                 ##observables = self.create_observables(ips)
@@ -102,19 +116,6 @@ class WildConnector:
                 #observables = []
                 #relationships = []
 
-                message = (
-                    "Connector successfully run ("
-                    + str((len(indicators) + len(observables) + len(relationships)))
-                    + " events have been processed), storing last_run as "
-                    + str(now)
-                )
-                self.helper.log_info(message)
-                self.helper.set_state(
-                    {
-                        "last_run": now.timestamp(),
-                    }
-                )
-                time.sleep(self.interval)
 
             except (KeyboardInterrupt, SystemExit):
                 self.helper.log_info("Connector stop")

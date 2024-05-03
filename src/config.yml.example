@@ -10,6 +10,7 @@ connector:
   confidence_level: 70
   update_existing_data: True
   log_level: 'info'
+  openphish: True
 
 abusessl:
   url: 'https://sslbl.abuse.ch/blacklist/sslipblacklist.csv' # Required
