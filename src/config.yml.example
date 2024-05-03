@@ -5,13 +5,10 @@ opencti:
 connector:
   id: 'changeme'
   type: 'EXTERNAL_IMPORT'
-  name: 'Abuse.ch SSL Blacklist'
-  scope: 'abuse-ssl'
-  confidence_level: 70
+  name: 'Wild Connectors'
+  scope: 'wild'
+  confidence_level: 50
   update_existing_data: True
   log_level: 'info'
   openphish: True
-
-abusessl:
-  url: 'https://sslbl.abuse.ch/blacklist/sslipblacklist.csv' # Required
   interval: 360 # Required, in minutes

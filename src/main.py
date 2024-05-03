@@ -39,15 +39,11 @@ class WildConnector:
             ["connector", "openphish"],
             config,
         )
-        self.api_url = get_config_variable(
-            "ABUSESSL_URL",
-            ["abusessl", "url"],
-            config,
-        )
+
         self.interval = (
             get_config_variable(
-                "ABUSESSL_INTERVAL",
-                ["abusessl", "interval"],
+                "CONNECTOR_INTERVAL",
+                ["connector", "interval"],
                 config,
                 True,
             )
