@@ -72,6 +72,8 @@ class WildConnector:
                     self.helper.log_info(f"Connector last ran at: {last_seen} (UTC)")
                 else:
                     self.helper.log_info("Connector has never run")
+                
+                # Run OpenPhish connector
                 if self.openphish:
                     self.helper.log_info("Running OpenPhish connector")
                     openphish_urls = self.get_openphish()
@@ -225,7 +227,7 @@ class WildConnector:
         self.helper.log_info("Creating STIX Indicators")
         indicators = []
         for observable in observables:
-            pattern = f"[url:value = '{observable.value}']"
+            pattern = f"[Url:value = '{observable.value}']"
             indicator = stix2.Indicator(
                 id=Indicator.generate_id(pattern),
                 name=observable.value,
@@ -237,7 +239,7 @@ class WildConnector:
                 labels=labels,
                 object_marking_refs=[stix2.TLP_WHITE],
                 custom_properties={
-                    "x_opencti_main_observable_type": "URL",
+                    "x_opencti_main_observable_type": "Url",
                 },
             )
             indicators.append(indicator)
