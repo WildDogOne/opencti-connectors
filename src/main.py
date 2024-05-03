@@ -108,7 +108,7 @@ class WildConnector:
                 if self.phishingarmy:
                     self.helper.log_info("Running Phishing Army connector")
                     openphish_urls = self.get_txt(url="https://phishing.army/download/phishing_army_blocklist.txt")
-                    observables = self.create_url_observables(
+                    observables = self.create_observables(
                         openphish_urls,
                         ioc_type="domain",
                         description="Phishing Army URLs",
