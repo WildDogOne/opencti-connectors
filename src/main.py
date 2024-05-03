@@ -82,13 +82,15 @@ class WildConnector:
                 if self.openphish:
                     self.helper.log_info("Running OpenPhish connector")
                     openphish_urls = self.get_txt(url="https://openphish.com/feed.txt")
-                    observables = self.create_url_observables(
+                    observables = self.create_observables(
                         openphish_urls,
+                        ioc_type="url",
                         description="OpenPhish URLs",
                         labels=["osint", "phishing", "openphish"],
                     )
-                    indicators = self.create_url_indicators(
+                    indicators = self.create_indicators(
                         observables,
+                        ioc_type="url",
                         description="OpenPhish URLs",
                         labels=["osint", "phishing", "openphish"],
                     )
@@ -108,11 +110,13 @@ class WildConnector:
                     openphish_urls = self.get_txt(url="https://phishing.army/download/phishing_army_blocklist.txt")
                     observables = self.create_url_observables(
                         openphish_urls,
+                        ioc_type="domain",
                         description="Phishing Army URLs",
                         labels=["osint", "phishing", "phishingarmy"],
                     )
-                    indicators = self.create_url_indicators(
+                    indicators = self.create_indicators(
                         observables,
+                        ioc_type="domain",
                         description="Phishing Army URLs",
                         labels=["osint", "phishing", "phishingarmy"],
                     )
@@ -175,47 +179,61 @@ class WildConnector:
                 urls.append(line)
         return urls
 
-    def create_ip_observables(self, ip_addresses, description=None, labels=None):
-        """
-        Creates STIX IPv4 Observables from provided list of IPv4 addresses
 
-        :param ip_addresses: List of IPv4 addresses
-        :return: :class:`List` of STIX IPv4Address Observables
-        """
-        self.helper.log_info("Creating STIX Observables")
-        observables = []
-        for ip in ip_addresses:
-            observable = stix2.IPv4Address(
-                value=ip,
-                object_marking_refs=[stix2.TLP_WHITE],
-                custom_properties={
-                    "x_opencti_description": "Malicious SSL connections",
-                    "x_opencti_created_by_ref": f"{self.author.id}",
-                    "x_opencti_labels": ["osint", "ssl-blacklist"],
-                },
-            )
-            observables.append(observable)
-        return observables
-
-    def create_url_observables(self, urls, description=None, labels=None):
+    def create_observables(self, iocs, ioc_type=None, description=None, labels=None):
         """
         Creates STIX URL Observables from provided list of URLs
 
         :param urls: List of URLs
         :return: :class:`List` of STIX URL Observables
         """
+        #if observable["type"] == "domain":
+        #    type_observable = "Domain-Name.value"
+        #elif observable["type"] == "ip":
+        #    type_observable = "IPv4-Addr.value"
+        #elif observable["type"] == "url":
+        #    type_observable = "Url.value"
+        #elif observable["type"] == "sha256":
+        #    type_observable = "file.hashes.sha-256"
+        #elif observable["type"] == "md5":
+        #    type_observable = "file.hashes.md5"
+
         self.helper.log_info("Creating STIX Observables")
         observables = []
-        for url in urls:
-            observable = stix2.URL(
-                value=url,
-                object_marking_refs=[stix2.TLP_WHITE],
-                custom_properties={
-                    "x_opencti_description": description,
-                    "x_opencti_created_by_ref": f"{self.author.id}",
-                    "x_opencti_labels": labels,
-                },
-            )
+        for ioc in iocs:
+            if ioc_type == "url":
+                observable = stix2.URL(
+                    value=ioc,
+                    object_marking_refs=[stix2.TLP_WHITE],
+                    custom_properties={
+                        "x_opencti_description": description,
+                        "x_opencti_created_by_ref": f"{self.author.id}",
+                        "x_opencti_labels": labels,
+                    },
+                )
+            elif ioc_type == "domain":
+                observable = stix2.DomainName(
+                    value=ioc,
+                    object_marking_refs=[stix2.TLP_WHITE],
+                    custom_properties={
+                        "x_opencti_description": description,
+                        "x_opencti_created_by_ref": f"{self.author.id}",
+                        "x_opencti_labels": labels,
+                    },
+                )
+            elif ioc_type == "ipv4":
+                observable = stix2.IPv4Address(
+                    value=ioc,
+                    object_marking_refs=[stix2.TLP_WHITE],
+                    custom_properties={
+                        "x_opencti_description": description,
+                        "x_opencti_created_by_ref": f"{self.author.id}",
+                        "x_opencti_labels": labels,
+                    },
+                )
+            else:
+                self.helper.log_error("Failed to determine IOC type")
+
             observables.append(observable)
         return observables
 
@@ -247,7 +265,7 @@ class WildConnector:
             indicators.append(indicator)
         return indicators
 
-    def create_url_indicators(self, observables, description=None, labels=None):
+    def create_indicators(self, observables, ioc_type=None, description=None, labels=None):
         """
         Creates STIX Indicators from provided STIX observables
 
@@ -255,9 +273,21 @@ class WildConnector:
         :return: :class:`List` of STIX Indicators
         """
         self.helper.log_info("Creating STIX Indicators")
+        if ioc_type == "domain":
+            type_ioc = "Domain-Name:value"
+        elif ioc_type == "ip":
+            type_ioc = "IPv4-Addr:value"
+        elif ioc_type == "url":
+            type_ioc = "Url:value"
+        elif ioc_type == "sha256":
+            type_ioc = "File:hashes.'SHA-256'"
+        elif ioc_type == "md5":
+            type_ioc = "File:hashes.'MD5'"
+        else:
+            self.helper.log_error("Failed to determine IOC type")
         indicators = []
         for observable in observables:
-            pattern = f"[url:value = '{observable.value}']"
+            pattern = f"[{type_ioc} = '{observable.value}']"
             indicator = stix2.Indicator(
                 id=Indicator.generate_id(pattern),
                 name=observable.value,
@@ -269,7 +299,7 @@ class WildConnector:
                 labels=labels,
                 object_marking_refs=[stix2.TLP_WHITE],
                 custom_properties={
-                    "x_opencti_main_observable_type": "Url",
+                    "x_opencti_main_observable_type": type_ioc.split(":")[0],
                 },
             )
             indicators.append(indicator)
