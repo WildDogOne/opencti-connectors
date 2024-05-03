@@ -24,7 +24,7 @@ class WildConnector:
             if os.path.isfile(config_file_path)
             else {}
         )
-        
+
         self.helper = OpenCTIConnectorHelper(config)
         name = get_config_variable(
             "CONNECTOR_NAME", ["connector", "name"], config
@@ -78,7 +78,19 @@ class WildConnector:
                     self.helper.log_info("Connector has never run")
                 if self.openphish:
                     openphish_urls = self.get_openphish()
-                print(openphish_urls)
+                    observables = self.create_url_observables(
+                        openphish_urls,
+                        description="OpenPhish URLs",
+                        labels=["osint", "phishing", "openphish"],
+                    )
+                    indicators = self.create_url_indicators(
+                        observables,
+                        description="OpenPhish URLs",
+                        labels=["osint", "phishing", "openphish"],
+                    )
+                    relationships = self.create_relationships(observables, indicators)
+                    bundle = self.create_bundle(observables, indicators, relationships)
+                    self.send_bundle(bundle, work_id)
 
                 ##ips = self.get_ips(self.api_url)
                 ##observables = self.create_observables(ips)
@@ -86,9 +98,9 @@ class WildConnector:
                 ##relationships = self.create_relationships(observables, indicators)
                 ##bundle = self.create_bundle(observables, indicators, relationships)
                 ##self.send_bundle(bundle, work_id)
-                indicators = []
-                observables = []
-                relationships = []
+                #indicators = []
+                #observables = []
+                #relationships = []
 
                 message = (
                     "Connector successfully run ("
@@ -114,10 +126,10 @@ class WildConnector:
 
     def get_openphish(self, url="https://openphish.com/feed.txt"):
         """
-        Retrieves response from provided URL and grabs IPv4 addresses from resulting HTML
+        Retrieves response from provided URL and grabs URLs  from resulting HTML
 
-        :param url: URL for list of IPv4 addresses
-        :return: :class:`List` of IPv4 addresses
+        :param url: URL for list of URLs
+        :return: :class:`List` of URLs
         """
         self.helper.log_info("Getting OpenPhish URLs")
         response = requests.get(url)
@@ -134,7 +146,7 @@ class WildConnector:
                 urls.append(line)
         return urls
 
-    def create_observables(self, ip_addresses):
+    def create_ip_observables(self, ip_addresses, description=None, labels=None):
         """
         Creates STIX IPv4 Observables from provided list of IPv4 addresses
 
@@ -156,7 +168,29 @@ class WildConnector:
             observables.append(observable)
         return observables
 
-    def create_indicators(self, observables):
+    def create_url_observables(self, urls, description=None, labels=None):
+        """
+        Creates STIX URL Observables from provided list of URLs
+
+        :param urls: List of URLs
+        :return: :class:`List` of STIX URL Observables
+        """
+        self.helper.log_info("Creating STIX Observables")
+        observables = []
+        for url in urls:
+            observable = stix2.URL(
+                value=url,
+                object_marking_refs=[stix2.TLP_WHITE],
+                custom_properties={
+                    "x_opencti_description": description,
+                    "x_opencti_created_by_ref": f"{self.author.id}",
+                    "x_opencti_labels": labels,
+                },
+            )
+            observables.append(observable)
+        return observables
+
+    def create_ip_indicators(self, observables):
         """
         Creates STIX Indicators from provided STIX observables
 
@@ -179,6 +213,34 @@ class WildConnector:
                 object_marking_refs=[stix2.TLP_WHITE],
                 custom_properties={
                     "x_opencti_main_observable_type": "IPv4-Addr",
+                },
+            )
+            indicators.append(indicator)
+        return indicators
+
+    def create_url_indicators(self, observables, description=None, labels=None):
+        """
+        Creates STIX Indicators from provided STIX observables
+
+        :param observables: List of STIX URL Observables
+        :return: :class:`List` of STIX Indicators
+        """
+        self.helper.log_info("Creating STIX Indicators")
+        indicators = []
+        for observable in observables:
+            pattern = f"[url:value = '{observable.value}']"
+            indicator = stix2.Indicator(
+                id=Indicator.generate_id(pattern),
+                name=observable.value,
+                description=description,
+                created_by_ref=f"{self.author.id}",
+                confidence=self.helper.connect_confidence_level,
+                pattern_type="stix",
+                pattern=pattern,
+                labels=labels,
+                object_marking_refs=[stix2.TLP_WHITE],
+                custom_properties={
+                    "x_opencti_main_observable_type": "URL",
                 },
             )
             indicators.append(indicator)
