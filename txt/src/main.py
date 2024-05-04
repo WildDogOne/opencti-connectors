@@ -95,15 +95,14 @@ class WildConnector:
                     self.helper.log_info("Connector has never run")
                 
                 
-                self.helper.log_info(self.url)
-                self.helper.log_info(self.ioc_type)
-                self.helper.log_info(self.description)
-                self.helper.log_info(self.labels)
-                quit()
+                self.helper.log_debug(f"URL to pull: {self.url}")
+                self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
+                self.helper.log_debug(f"Description to use: {self.description}")
+                self.helper.log_debug(f"Labels to attach: {self.labels}")
                 self.helper.log_info("Running Text connector")
-                openphish_urls = self.get_txt(url=self.url)
+                iocs = self.get_txt(url=self.url)
                 observables = self.create_observables(
-                    openphish_urls,
+                    iocs,
                     ioc_type=self.ioc_type,
                     description=self.description,
                     labels=self.labels,
@@ -126,61 +125,6 @@ class WildConnector:
                 self.helper.log_info(message)
 
 
-
-
-                # Run connector
-                ##if self.openphish:
-                ##    self.helper.log_info("Running OpenPhish connector")
-                ##    openphish_urls = self.get_txt(url="https://openphish.com/feed.txt")
-                ##    observables = self.create_observables(
-                ##        openphish_urls,
-                ##        ioc_type="url",
-                ##        description="OpenPhish URLs",
-                ##        labels=["osint", "phishing", "openphish"],
-                ##    )
-                ##    indicators = self.create_indicators(
-                ##        observables,
-                ##        ioc_type="url",
-                ##        description="OpenPhish URLs",
-                ##        labels=["osint", "phishing", "openphish"],
-                ##    )
-                ##    relationships = self.create_relationships(observables, indicators)
-                ##    bundle = self.create_bundle(observables, indicators, relationships)
-                ##    self.send_bundle(bundle, work_id)
-                ##    message = (
-                ##        "Connector successfully run ("
-                ##        + str((len(indicators) + len(observables) + len(relationships)))
-                ##        + " events have been processed), storing last_run as "
-                ##        + str(now)
-                ##    )
-                ##    self.helper.log_info(message)
-
-                ##if self.phishingarmy:
-                ##    self.helper.log_info("Running Phishing Army connector")
-                ##    openphish_urls = self.get_txt(url="https://phishing.army/download/phishing_army_blocklist.txt")
-                ##    observables = self.create_observables(
-                ##        openphish_urls,
-                ##        ioc_type="domain",
-                ##        description="Phishing Army URLs",
-                ##        labels=["osint", "phishing", "phishingarmy"],
-                ##    )
-                ##    indicators = self.create_indicators(
-                ##        observables,
-                ##        ioc_type="domain",
-                ##        description="Phishing Army URLs",
-                ##        labels=["osint", "phishing", "phishingarmy"],
-                ##    )
-                ##    relationships = self.create_relationships(observables, indicators)
-                ##    bundle = self.create_bundle(observables, indicators, relationships)
-                ##    self.send_bundle(bundle, work_id)
-                ##    message = (
-                ##        "Connector successfully run ("
-                ##        + str((len(indicators) + len(observables) + len(relationships)))
-                ##        + " events have been processed), storing last_run as "
-                ##        + str(now)
-                ##    )
-                ##    self.helper.log_info(message)
-
                 self.helper.set_state(
                     {
                         "last_run": now.timestamp(),
@@ -188,15 +132,6 @@ class WildConnector:
                 )
                 time.sleep(self.interval)
 
-                ##ips = self.get_ips(self.api_url)
-                ##observables = self.create_observables(ips)
-                ##indicators = self.create_indicators(observables)
-                ##relationships = self.create_relationships(observables, indicators)
-                ##bundle = self.create_bundle(observables, indicators, relationships)
-                ##self.send_bundle(bundle, work_id)
-                #indicators = []
-                #observables = []
-                #relationships = []
 
 
             except (KeyboardInterrupt, SystemExit):
