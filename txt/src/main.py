@@ -90,7 +90,10 @@ class WildConnector:
                     self.helper.log_info("Connector has never run")
                 
                 
-                self.helper.log_info(self.url, self.ioc_type, self.description, self.labels)
+                self.helper.log_info(self.url)
+                self.helper.log_info(self.ioc_type)
+                self.helper.log_info(self.description)
+                self.helper.log_info(self.labels)
                 quit()
                 self.helper.log_info("Running Text connector")
                 openphish_urls = self.get_txt(url=self.url)
