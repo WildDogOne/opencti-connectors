@@ -90,8 +90,8 @@ class WildConnector:
                     self.helper.log_info("Connector has never run")
                 
                 
-                self.helper.log_info("Running Text connector")
-                quit(self.url, self.ioc_type, self.description, self.labels)
+                self.helper.log_info(self.url, self.ioc_type, self.description, self.labels)
+                quit()
                 self.helper.log_info("Running Text connector")
                 openphish_urls = self.get_txt(url=self.url)
                 observables = self.create_observables(
