@@ -50,6 +50,11 @@ class WildConnector:
             ["connector", "labels"],
             config,
         )
+        if type(self.labels) is str:
+            if "," in self.labels:
+                self.labels = self.labels.split(",")
+            else:
+                self.labels = [self.labels]
         self.description = get_config_variable(
             "CONNECTOR_DESCRIPTION",
             ["connector", "description"],
