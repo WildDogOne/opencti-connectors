@@ -125,7 +125,7 @@ class WildConnector:
                 cleaned_iocs = []
                 for ioc in iocs:
                     if not ioc in old_indicators:
-                        iocs.append(ioc)
+                        cleaned_iocs.append(ioc)
                         old_indicators.append(ioc)
                 self.helper.log_info(f"IOCs new length: {len(cleaned_iocs)}")
                 self.helper.log_info(f"Deduplicating list, new length: {len(iocs)}")
