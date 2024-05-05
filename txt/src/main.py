@@ -102,13 +102,10 @@ class WildConnector:
                     os.makedirs(self.deduplication_folder)
                 # Read indicators from last run if they exist
                 filename = self.deduplication_folder + "/" + self.deduplication_file
-                old_indicators = None
+                old_indicators = []
                 if os.path.exists(filename):
                     with open(filename, "r") as f:
                         old_indicators = json.load(f)
-                        old_indicators = [
-                            indicator.lower() for indicator in old_indicators
-                        ]
                 else:
                     self.helper.log_info(
                         f"{filename} does not exist. No deduplication will be performed."
@@ -126,15 +123,17 @@ class WildConnector:
                     )
                     cleaned_iocs = []
                     for ioc in iocs:
-                        if ioc.lower() in old_indicators:
+                        if not ioc in old_indicators:
                             iocs.append(ioc)
-                    iocs = cleaned_iocs
-                    self.helper.log_info(f"New length: {len(iocs)}")
+                            old_indicators.append(ioc)
+                    self.helper.log_info(f"New length: {len(cleaned_iocs)}")
+                else:
+                    cleaned_iocs = iocs
                 with open(filename, "w") as f:
                     self.helper.log_info(f"Writing IOCs to disk")
-                    json.dump(iocs, f)
+                    json.dump(old_indicators, f)
                 observables = self.create_observables(
-                    iocs,
+                    cleaned_iocs,
                     ioc_type=self.ioc_type,
                     description=self.description,
                     labels=self.labels,
