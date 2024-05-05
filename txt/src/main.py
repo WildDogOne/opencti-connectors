@@ -56,28 +56,12 @@ class WildConnector:
                 self.labels = self.labels.split(",")
             else:
                 self.labels = [self.labels]
+
         self.description = get_config_variable(
             "CONNECTOR_DESCRIPTION",
             ["connector", "description"],
             config,
         )
-        self.deduplication_folder = get_config_variable(
-            "CONNECTOR_DEDUPLICATION_FOLDER",
-            ["connector", "deduplication_folder"],
-            config,
-        )
-        if self.deduplication_folder is None:
-            self.deduplication_folder = "/tmp"
-
-        self.deduplication_file = get_config_variable(
-            "CONNECTOR_DEDUPLICATION_FILE",
-            ["connector", "deduplication_file"],
-            config,
-        )
-        if self.deduplication_file is None:
-            self.deduplication_file = "indicators.json"
-        print(self.deduplication_folder + "/" + self.deduplication_file)
-
         self.interval = (
             get_config_variable(
                 "CONNECTOR_INTERVAL",
@@ -92,6 +76,9 @@ class WildConnector:
             ["connector", "update_existing_data"],
             config,
         )
+
+        self.deduplication_folder = "tmp/deduplication"
+        self.deduplication_file = "indicators.json"
 
     def run(self):
         """Running component of class"""
