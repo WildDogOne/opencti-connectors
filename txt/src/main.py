@@ -173,7 +173,7 @@ class WildConnector:
                 self.helper.log_error(str(exception))
                 time.sleep(self.interval)
 
-    def get_txt(self, url="https://openphish.com/feed.txt"):
+    def get_txt(self, url=None):
         """
         Retrieves response from provided URL and grabs URLs  from resulting HTML
 
@@ -181,7 +181,10 @@ class WildConnector:
         :return: :class:`List` of URLs
         """
         self.helper.log_info("Getting URLs from text file")
-        response = requests.get(url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        }
+        response = requests.get(url, headers=headers)
         if response.ok:
             response_text = response.text
         else:
@@ -251,7 +254,6 @@ class WildConnector:
 
             observables.append(observable)
         return observables
-
 
     def create_indicators(
         self, observables, ioc_type=None, description=None, labels=None
