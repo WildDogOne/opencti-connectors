@@ -1,4 +1,5 @@
 import os
+import json
 import time
 from datetime import datetime, timezone
 
@@ -94,6 +95,14 @@ class WildConnector:
                 else:
                     self.helper.log_info("Connector has never run")
                 
+                # Read indicators from last run if they exist
+                filename = 'indicators.json'
+                if os.path.exists(filename):
+                    with open(filename, 'r') as f:
+                        old_indicators = json.load(f)
+                else:
+                    self.helper.log_debug(f"{filename} does not exist.")
+                
                 
                 self.helper.log_debug(f"URL to pull: {self.url}")
                 self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
@@ -101,6 +110,12 @@ class WildConnector:
                 self.helper.log_debug(f"Labels to attach: {self.labels}")
                 self.helper.log_info("Running Text connector")
                 iocs = self.get_txt(url=self.url)
+                if old_indicators:
+                    for ioc in iocs:
+                        if ioc in old_indicators:
+                            iocs.remove(ioc)
+                with open(filename, 'w') as f:
+                    json.dump(iocs, f)
                 observables = self.create_observables(
                     iocs,
                     ioc_type=self.ioc_type,
