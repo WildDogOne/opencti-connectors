@@ -66,6 +66,8 @@ class WildConnector:
             ["connector", "deduplication"],
             config,
         )
+        if self.deduplication_folder is None:
+            self.deduplication_folder = "/tmp"
 
         self.interval = (
             get_config_variable(
