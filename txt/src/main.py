@@ -102,7 +102,7 @@ class WildConnector:
                     with open(filename, 'r') as f:
                         old_indicators = json.load(f)
                 else:
-                    self.helper.info(f"{filename} does not exist. No deduplication will be performed.")
+                    self.helper.log_info(f"{filename} does not exist. No deduplication will be performed.")
                 
                 
                 self.helper.log_debug(f"URL to pull: {self.url}")
