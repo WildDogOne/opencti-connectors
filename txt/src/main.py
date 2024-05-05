@@ -132,6 +132,9 @@ class WildConnector:
                 with open(filename, "w") as f:
                     self.helper.log_info(f"Writing IOCs to disk")
                     json.dump(old_indicators, f)
+                # Remove old indicators from memory
+                old_indicators = []
+                iocs = []
                 observables = self.create_observables(
                     cleaned_iocs,
                     ioc_type=self.ioc_type,
