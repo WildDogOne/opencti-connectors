@@ -100,6 +100,8 @@ class WildConnector:
                 else:
                     self.helper.log_info("Connector has never run")
 
+                if not os.path.exists(self.deduplication_folder):
+                    os.makedirs(self.deduplication_folder)
                 # Read indicators from last run if they exist
                 filename = self.deduplication_folder + "/indicators.json"
                 old_indicators = None
