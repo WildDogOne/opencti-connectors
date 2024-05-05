@@ -97,6 +97,7 @@ class WildConnector:
                 
                 # Read indicators from last run if they exist
                 filename = 'indicators.json'
+                old_indicators = None
                 if os.path.exists(filename):
                     with open(filename, 'r') as f:
                         old_indicators = json.load(f)
