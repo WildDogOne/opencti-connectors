@@ -267,7 +267,7 @@ class WildConnector:
         self.helper.log_info("Creating STIX Indicators")
         if ioc_type == "domain":
             type_ioc = "Domain-Name:value"
-        elif ioc_type == "ip":
+        elif ioc_type == "ipv4":
             type_ioc = "IPv4-Addr:value"
         elif ioc_type == "url":
             type_ioc = "Url:value"
