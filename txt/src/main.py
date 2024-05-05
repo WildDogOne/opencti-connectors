@@ -252,33 +252,6 @@ class WildConnector:
             observables.append(observable)
         return observables
 
-    def create_ip_indicators(self, observables):
-        """
-        Creates STIX Indicators from provided STIX observables
-
-        :param observables: List of STIX IPv4Address observables
-        :return: :class:`List` of STIX Indicators
-        """
-        self.helper.log_info("Creating STIX Indicators")
-        indicators = []
-        for observable in observables:
-            pattern = f"[ipv4-addr:value = '{observable.value}']"
-            indicator = stix2.Indicator(
-                id=Indicator.generate_id(pattern),
-                name=observable.value,
-                description="Malicious SSL connections",
-                created_by_ref=f"{self.author.id}",
-                confidence=self.helper.connect_confidence_level,
-                pattern_type="stix",
-                pattern=pattern,
-                labels=["osint", "ssl-blacklist"],
-                object_marking_refs=[stix2.TLP_WHITE],
-                custom_properties={
-                    "x_opencti_main_observable_type": "IPv4-Addr",
-                },
-            )
-            indicators.append(indicator)
-        return indicators
 
     def create_indicators(
         self, observables, ioc_type=None, description=None, labels=None
