@@ -77,7 +77,7 @@ class WildConnector:
             config,
         )
 
-        self.deduplication_folder = "tmp/deduplication"
+        self.deduplication_folder = "/tmp/deduplication"
         self.deduplication_file = "indicators.json"
 
     def run(self):
