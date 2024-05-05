@@ -101,6 +101,7 @@ class WildConnector:
                 if os.path.exists(filename):
                     with open(filename, 'r') as f:
                         old_indicators = json.load(f)
+                        old_indicators = [indicator.lower() for indicator in old_indicators]
                 else:
                     self.helper.log_info(f"{filename} does not exist. No deduplication will be performed.")
                 
@@ -114,7 +115,7 @@ class WildConnector:
                 if old_indicators:
                     self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
                     for ioc in iocs:
-                        if ioc in old_indicators:
+                        if ioc.lower() in old_indicators:
                             iocs.remove(ioc)
                     self.helper.log_info(f"New length: {len(iocs)}")
                 with open(filename, 'w') as f:
