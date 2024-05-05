@@ -61,6 +61,11 @@ class WildConnector:
             ["connector", "description"],
             config,
         )
+        self.deduplication_folder = get_config_variable(
+            "CONNECTOR_DEDUPLICATION",
+            ["connector", "deduplication"],
+            config,
+        )
 
         self.interval = (
             get_config_variable(
@@ -94,18 +99,21 @@ class WildConnector:
                     self.helper.log_info(f"Connector last ran at: {last_seen} (UTC)")
                 else:
                     self.helper.log_info("Connector has never run")
-                
+
                 # Read indicators from last run if they exist
-                filename = 'indicators.json'
+                filename = self.deduplication_folder + "/indicators.json"
                 old_indicators = None
                 if os.path.exists(filename):
-                    with open(filename, 'r') as f:
+                    with open(filename, "r") as f:
                         old_indicators = json.load(f)
-                        old_indicators = [indicator.lower() for indicator in old_indicators]
+                        old_indicators = [
+                            indicator.lower() for indicator in old_indicators
+                        ]
                 else:
-                    self.helper.log_info(f"{filename} does not exist. No deduplication will be performed.")
-                
-                
+                    self.helper.log_info(
+                        f"{filename} does not exist. No deduplication will be performed."
+                    )
+
                 self.helper.log_debug(f"URL to pull: {self.url}")
                 self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
                 self.helper.log_debug(f"Description to use: {self.description}")
@@ -113,12 +121,14 @@ class WildConnector:
                 self.helper.log_info("Running Text connector")
                 iocs = self.get_txt(url=self.url)
                 if old_indicators:
-                    self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
+                    self.helper.log_info(
+                        f"Deduplicating list, current length: {len(iocs)}"
+                    )
                     for ioc in iocs:
                         if ioc.lower() in old_indicators:
                             iocs.remove(ioc)
                     self.helper.log_info(f"New length: {len(iocs)}")
-                with open(filename, 'w') as f:
+                with open(filename, "w") as f:
                     self.helper.log_info(f"Writing IOCs to disk")
                     json.dump(iocs, f)
                 observables = self.create_observables(
@@ -144,15 +154,12 @@ class WildConnector:
                 )
                 self.helper.log_info(message)
 
-
                 self.helper.set_state(
                     {
                         "last_run": now.timestamp(),
                     }
                 )
                 time.sleep(self.interval)
-
-
 
             except (KeyboardInterrupt, SystemExit):
                 self.helper.log_info("Connector stop")
@@ -184,7 +191,6 @@ class WildConnector:
                 urls.append(line)
         return urls
 
-
     def create_observables(self, iocs, ioc_type=None, description=None, labels=None):
         """
         Creates STIX URL Observables from provided list of URLs
@@ -192,15 +198,15 @@ class WildConnector:
         :param urls: List of URLs
         :return: :class:`List` of STIX URL Observables
         """
-        #if observable["type"] == "domain":
+        # if observable["type"] == "domain":
         #    type_observable = "Domain-Name.value"
-        #elif observable["type"] == "ip":
+        # elif observable["type"] == "ip":
         #    type_observable = "IPv4-Addr.value"
-        #elif observable["type"] == "url":
+        # elif observable["type"] == "url":
         #    type_observable = "Url.value"
-        #elif observable["type"] == "sha256":
+        # elif observable["type"] == "sha256":
         #    type_observable = "file.hashes.sha-256"
-        #elif observable["type"] == "md5":
+        # elif observable["type"] == "md5":
         #    type_observable = "file.hashes.md5"
 
         self.helper.log_info("Creating STIX Observables")
@@ -270,7 +276,9 @@ class WildConnector:
             indicators.append(indicator)
         return indicators
 
-    def create_indicators(self, observables, ioc_type=None, description=None, labels=None):
+    def create_indicators(
+        self, observables, ioc_type=None, description=None, labels=None
+    ):
         """
         Creates STIX Indicators from provided STIX observables
 
