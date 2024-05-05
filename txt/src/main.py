@@ -130,12 +130,12 @@ class TextConnector:
                 self.helper.log_info("Running Text connector")
                 iocs = self.get_txt(url=self.url)
 
-                self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
-                self.helper.log_info(
-                    f"Deduplication array length: {len(old_indicators)}"
-                )
-                cleaned_iocs = []
                 if self.deduplication is True:
+                    self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
+                    self.helper.log_info(
+                        f"Deduplication array length: {len(old_indicators)}"
+                    )
+                    cleaned_iocs = []
                     for ioc in iocs:
                         if not ioc in old_indicators:
                             cleaned_iocs.append(ioc)
