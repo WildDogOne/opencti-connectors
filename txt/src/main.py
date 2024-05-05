@@ -131,6 +131,7 @@ class WildConnector:
                             old_indicators.append(ioc)
                     self.helper.log_info(f"New length: {len(cleaned_iocs)}")
                 else:
+                    self.helper.log_info("No deduplication performed")
                     cleaned_iocs = iocs
                 with open(filename, "w") as f:
                     self.helper.log_info(f"Writing IOCs to disk")
