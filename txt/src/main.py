@@ -101,7 +101,7 @@ class WildConnector:
                     with open(filename, 'r') as f:
                         old_indicators = json.load(f)
                 else:
-                    self.helper.log_debug(f"{filename} does not exist.")
+                    self.helper.info(f"{filename} does not exist. No deduplication will be performed.")
                 
                 
                 self.helper.log_debug(f"URL to pull: {self.url}")
@@ -111,10 +111,13 @@ class WildConnector:
                 self.helper.log_info("Running Text connector")
                 iocs = self.get_txt(url=self.url)
                 if old_indicators:
+                    self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
                     for ioc in iocs:
                         if ioc in old_indicators:
                             iocs.remove(ioc)
+                    self.helper.log_info(f"New length: {len(iocs)}")
                 with open(filename, 'w') as f:
+                    self.helper.log_info(f"Writing IOCs to disk")
                     json.dump(iocs, f)
                 observables = self.create_observables(
                     iocs,
