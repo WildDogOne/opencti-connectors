@@ -30,7 +30,7 @@ Known working sources:
 | `connector_log_level`        | `CONNECTOR_LOG_LEVEL`        | Yes       | The log level for this connector, could be `debug`, `info`, `warn` or `error` (less verbose). |
 | `connector_interval`         | `CONNECTOR_INTERVAL`         | Yes       | The interval in Minutes, make this appropriate to the source                                  |
 | `connector_url`              | `CONNECTOR_URL`              | Yes       | The URL of the textfile                                                                       |
-| `connector_ioc_type`         | `CONNECTOR_IOC_TYPE`         | Yes       | The IOC Type, should be one of: domain, ip, url, sha256, md5                                  |
+| `connector_ioc_type`         | `CONNECTOR_IOC_TYPE`         | Yes       | The IOC Type, should be one of: domain, ipv4, url, sha256, md5                                  |
 | `connector_labels`           | `CONNECTOR_LABELS`           | Yes       | The Labels to attach, comma seperated array                                                   |
 | `connector_description`      | `CONNECTOR_DESCRIPTION`      | Yes       | The description which should be added to the indicators/observables                           |
 | `connector_deduplication`    | `CONNECTOR_DEDUPLICATION`    | No        | Set to false if you don't want to deduplicate                                                 |
