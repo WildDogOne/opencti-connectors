@@ -117,22 +117,18 @@ class WildConnector:
                 self.helper.log_debug(f"Labels to attach: {self.labels}")
                 self.helper.log_info("Running Text connector")
                 iocs = self.get_txt(url=self.url)
-                if old_indicators:
-                    self.helper.log_info(
-                        f"Deduplicating list, current length: {len(iocs)}"
-                    )
-                    self.helper.log_info(
-                        f"Deduplication array length: {len(old_indicators)}"
-                    )
-                    cleaned_iocs = []
-                    for ioc in iocs:
-                        if not ioc in old_indicators:
-                            iocs.append(ioc)
-                            old_indicators.append(ioc)
-                    self.helper.log_info(f"New length: {len(cleaned_iocs)}")
-                else:
-                    self.helper.log_info("No deduplication performed")
-                    cleaned_iocs = iocs
+
+                self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
+                self.helper.log_info(
+                    f"Deduplication array length: {len(old_indicators)}"
+                )
+                cleaned_iocs = []
+                for ioc in iocs:
+                    if not ioc in old_indicators:
+                        iocs.append(ioc)
+                        old_indicators.append(ioc)
+                self.helper.log_info(f"IOCs new length: {len(cleaned_iocs)}")
+                self.helper.log_info(f"Deduplicating list, new length: {len(iocs)}")
                 with open(filename, "w") as f:
                     self.helper.log_info(f"Writing IOCs to disk")
                     json.dump(old_indicators, f)
