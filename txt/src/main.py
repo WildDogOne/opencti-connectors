@@ -121,6 +121,9 @@ class WildConnector:
                     self.helper.log_info(
                         f"Deduplicating list, current length: {len(iocs)}"
                     )
+                    self.helper.log_info(
+                        f"Deduplication array length: {len(old_indicators)}"
+                    )
                     cleaned_iocs = []
                     for ioc in iocs:
                         if not ioc in old_indicators:
