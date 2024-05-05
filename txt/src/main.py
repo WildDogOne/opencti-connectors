@@ -15,8 +15,12 @@ from pycti import (
 )
 
 
-class WildConnector:
-    """Enumerates files from text, then processes them"""
+class TextConnector:
+    """
+    Downloads Text file from URL
+    Enumerates Indicators and Observables from that text
+    Does local deduplication of IOCs
+    """
 
     def __init__(self):
         config_file_path = os.path.dirname(os.path.abspath(__file__)) + "/config.yml"
@@ -76,6 +80,14 @@ class WildConnector:
             ["connector", "update_existing_data"],
             config,
         )
+        self.deduplication = get_config_variable(
+            "CONNECTOR_DEDUPLICATE",
+            ["connector", "deduplicate"],
+            config,
+        )
+        if self.deduplication is not False:
+            self.deduplication = True
+
 
         self.deduplication_folder = "/tmp/deduplication"
         self.deduplication_file = "indicators.json"
@@ -123,18 +135,22 @@ class WildConnector:
                     f"Deduplication array length: {len(old_indicators)}"
                 )
                 cleaned_iocs = []
-                for ioc in iocs:
-                    if not ioc in old_indicators:
-                        cleaned_iocs.append(ioc)
-                        old_indicators.append(ioc)
-                self.helper.log_info(f"IOCs new length: {len(cleaned_iocs)}")
-                self.helper.log_info(f"Deduplicating list, new length: {len(iocs)}")
-                with open(filename, "w") as f:
-                    self.helper.log_info(f"Writing IOCs to disk")
-                    json.dump(old_indicators, f)
+                if self.deduplication is True:
+                    for ioc in iocs:
+                        if not ioc in old_indicators:
+                            cleaned_iocs.append(ioc)
+                            old_indicators.append(ioc)
+                    self.helper.log_info(f"IOCs new length: {len(cleaned_iocs)}")
+                    self.helper.log_info(f"Deduplicating list, new length: {len(iocs)}")
+                    with open(filename, "w") as f:
+                        self.helper.log_info(f"Writing IOCs to disk")
+                        json.dump(old_indicators, f)
+                    old_indicators = []
+                    iocs = []
+                else:
+                    cleaned_iocs = iocs
+                    self.helper.log_info("Deduplication is disabled")
                 # Remove old indicators from memory
-                old_indicators = []
-                iocs = []
                 observables = self.create_observables(
                     cleaned_iocs,
                     ioc_type=self.ioc_type,
@@ -360,8 +376,8 @@ class WildConnector:
 
 if __name__ == "__main__":
     try:
-        WildConnector = WildConnector()
-        WildConnector.run()
+        TextConnector = TextConnector()
+        TextConnector.run()
     except Exception as e:
         print(e)
         time.sleep(10)
