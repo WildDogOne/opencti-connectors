@@ -1,15 +1,25 @@
 version: '3'
 services:
-  connector-abuse-ssl:
-    image: opencti/connector-abuse-ssl:6.0.10
+  connector-txt-${TI Source Name}:
+    build: ./txt/
+    container_name: connector-txt-${TI Source Name}
+    # The txt connector will always try to do a local deduplication
+    # If you want this to be persistent, you need to mount a volume
+    # Add "CONNECTOR_DEDUPLICATE=False" to the .env file to disable deduplication
+    volumes:
+      - ./deduplication/${TI Source Name}:/tmp/deduplication
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=CHANGEME
-      - CONNECTOR_ID=CHANGEME_UUID4
-      - "CONNECTOR_NAME=Abuse.ch SSL Blacklist"
-      - CONNECTOR_SCOPE=abusessl
-      - CONNECTOR_CONFIDENCE_LEVEL=70
-      - CONNECTOR_LOG_LEVEL=error
-      - ABUSESSL_URL=https://sslbl.abuse.ch/blacklist/sslipblacklist.csv
-      - ABUSESSL_INTERVAL=360 # Time to wait in minutes between subsequent requests
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${Unique UUID}
+      - "CONNECTOR_NAME=${TI Source Name}"
+      - CONNECTOR_SCOPE=${TI Source Name}
+      - CONNECTOR_CONFIDENCE_LEVEL=25
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_INTERVAL=60 # Time to wait in minutes between subsequent requests
+      - CONNECTOR_URL=https://${TI Source Name}.com/feed.txt # Textfile to download
+      - CONNECTOR_IOC_TYPE=url # Type of IOC expected in TXT File: domain, ipv4, url, sha256, md5
+      - CONNECTOR_LABELS=osint, phishing, ${TI Source Name}
+      - CONNECTOR_DESCRIPTION=${TI Source Name} URL
+      - CONNECTOR_DEDUPLICATE=True
     restart: always

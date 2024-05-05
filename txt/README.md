@@ -2,10 +2,13 @@
 
 The Connector can be configured with an URL pointing to a textfile with a certain type of indicator.
 Never more than one indicator type per text file.
+By default it will try to do a local deduplication against a locally stored json file under /tmp/deduplication/indicators.json
+If you want to persist this json, you can map it to a volume
 
 Known working sources:
 - https://openphish.com/feed.txt
-- =https://phishing.army/download/phishing_army_blocklist.txt
+- https://phishing.army/download/phishing_army_blocklist.txt
+- https://www.binarydefense.com/banlist.txt
 
 
 ## Installation
@@ -30,6 +33,7 @@ Known working sources:
 | `connector_ioc_type`         | `CONNECTOR_IOC_TYPE`         | Yes       | The IOC Type, should be one of: domain, ip, url, sha256, md5                                  |
 | `connector_labels`           | `CONNECTOR_LABELS`           | Yes       | The Labels to attach, comma seperated array                                                   |
 | `connector_description`      | `CONNECTOR_DESCRIPTION`      | Yes       | The description which should be added to the indicators/observables                           |
+| `connector_deduplication`    | `CONNECTOR_DEDUPLICATION`    | No        | Set to false if you don't want to deduplicate                                                 |
 
 
 
