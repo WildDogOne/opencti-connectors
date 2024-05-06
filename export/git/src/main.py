@@ -63,6 +63,18 @@ class ExportGit:
             config,
             False
         )
+        self.timeframes = get_config_variable(
+            "CONNECTOR_TIMEFRAMES",
+            ["connector", "timeframes"],
+            config,
+            False
+        )
+        if type(self.timeframes) is str:
+            if "," in self.timeframes:
+                self.timeframes = self.timeframes.split(",")
+            else:
+                self.timeframes = [self.timeframes]
+
 
     def export_dict_list_to_csv(self, data):
         output = io.StringIO()
@@ -459,10 +471,10 @@ class ExportGit:
             # last_run = parse("2024-05-01").strftime("%Y-%m-%dT%H:%M:%SZ")
 
             #timeframes = [1, 7]
-            timeframes = [1]
-            for timeframe in timeframes:
+            #timeframes = [1]
+            for timeframe in self.timeframes:
                 last_run = (
-                    datetime.now(tz=timezone.utc) - timedelta(days=timeframe)
+                    datetime.now(tz=timezone.utc) - timedelta(hours=timeframe)
                 ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
                 current_state = self.helper.get_state()
@@ -476,7 +488,7 @@ class ExportGit:
                     self.dump_data(
                         entities_list,
                         file_path=self.datafolder,
-                        file_name=indicator_type + "_" + str(timeframe) + "d",
+                        file_name=indicator_type + "_" + str(timeframe) + "h",
                         repo=repo
                     )
 
