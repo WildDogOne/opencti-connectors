@@ -74,6 +74,8 @@ class ExportGit:
                 self.timeframes = self.timeframes.split(",")
             else:
                 self.timeframes = [self.timeframes]
+        
+        self.helper.log_info(f"self.export_file_csv_delimiter - {self.export_file_csv_delimiter}\nself.datafolder - {self.datafolder}\nself.git_user - {self.git_user}\nself.git_password - {self.git_password}\nself.git_repo - {self.git_repo}\nself.timeframes - {self.timeframes}\n")
 
 
     def export_dict_list_to_csv(self, data):
