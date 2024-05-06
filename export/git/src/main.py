@@ -4,7 +4,8 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from git import Repo
 
 import yaml
 from pycti import OpenCTIConnectorHelper, get_config_variable
@@ -35,6 +36,32 @@ class ExportGit:
             config,
             False,
             ",",
+        )
+
+        self.datafolder = get_config_variable(
+            "CONNECTOR_DATAFOLDER",
+            ["connector", "datafolder"],
+            config,
+            False,
+            "/tmp/export-git/",
+        )
+        self.git_user = get_config_variable(
+            "CONNECTOR_GIT_USER",
+            ["connector", "git_user"],
+            config,
+            False
+        )
+        self.git_password = get_config_variable(
+            "CONNECTOR_GIT_PASSWORD",
+            ["connector", "git_password"],
+            config,
+            False
+        )
+        self.git_repo = get_config_variable(
+            "CONNECTOR_GIT_REPO",
+            ["connector", "git_repo"],
+            config,
+            False
         )
 
     def export_dict_list_to_csv(self, data):
@@ -326,10 +353,13 @@ class ExportGit:
         else:
             self.helper.log_error("No indicator type provided")
             quit()
-
+        # if indicator_type.lower() == "artifact":
+        #    filters["filters"].append(
+        #        {"key": "objectLabel", "values": ["whitelist"]},
+        #    )
         entities_list = self.helper.api_impersonate.stix2.export_entities_list(
             entity_type=indicator_type,
-            search="google",
+            # search="google",
             filters=filters,
             orderBy="created_at",
             orderMode="asc",
@@ -337,29 +367,7 @@ class ExportGit:
         )
         return entities_list
 
-
-        final_indicators = []
-        data = {"pagination": {"hasNextPage": True, "endCursor": None}}
-        while data["pagination"]["hasNextPage"]:
-            after = data["pagination"]["endCursor"]
-            if after:
-                print("Listing indicators after " + after)
-            data = opencti_api_client.indicator.list(
-                first=50,
-                after=after,
-                customAttributes=custom_attributes,
-                withPagination=True,
-                orderBy="created_at",
-                orderMode="asc",
-            )
-            final_indicators += data["entities"]
-
-        for indicator in final_indicators:
-            print("[" + indicator["created"] + "] " + indicator["id"])
-
-
-
-    def dump_data(self, data, file_path, file_name):
+    def dump_data(self, data, file_path=None, file_name=None, repo=None):
         csv = self.export_dict_list_to_csv(data)
         # Check if the directory exists
         if not os.path.exists(file_path):
@@ -377,6 +385,12 @@ class ExportGit:
         with open(full_path, "w", newline="") as csvfile:
             csvfile.write(csv)
 
+        add_file = [file_name + ".json", file_name + ".csv"]  # relative path from git root
+        repo.index.add(add_file)  # notice the add function requires a list of paths
+        repo.index.commit(f"Update {file_name}")
+        origin = repo.remote(name='origin')
+        origin.push()
+
     def cleanup(self, data):
         cleanups = [
             "id",
@@ -386,7 +400,6 @@ class ExportGit:
             "objectOrganization",
             "creators",
             "createdBy",
-            "objectMarking",
             "objectLabel",
             "externalReferences",
             "indicators",
@@ -396,46 +409,93 @@ class ExportGit:
             "externalReferencesIds",
             "indicatorsIds",
             "mime_type",
-            "hashes",
             "importFiles",
             "importFilesIds",
         ]
+        # Drop unnecessary fields
         for x in data:
             for y in cleanups:
                 if y in x:
                     del x[y]
-        return data
+
+        # Remove TLP Red
+        output = []
+        for x in data:
+            if "objectMarking" in x:
+                if len(x["objectMarking"]) > 0:
+                    for y in x["objectMarking"]:
+                        if "definition" in y:
+                            if (
+                                y["definition"] == "TLP:GREEN"
+                                or y["definition"] == "TLP:CLEAR"
+                                #or y["definition"] == "PAP:GREEN"
+                                #or y["definition"] == "PAP:CLEAR"
+                            ):
+                                output.append(x)
+                                continue
+                # else:
+                #    print(x)
+                #    quit()
+
+        return output
+
+    def initialize_git(self):
+        remote = f"https://{self.git_user}:{self.git_password}@{self.git_repo}"
+        if os.path.exists(self.datafolder):
+            repo = Repo(self.datafolder)
+        else:
+            repo = Repo.clone_from(remote, self.datafolder)
+        return repo
+
+
 
     def run(self):
         from pprint import pprint
         from dateutil.parser import parse
-        import datetime
+        repo = self.initialize_git()
 
         while True:
-            # self.helper.connect()
             self.helper.log_info("Connector started")
-            last_run = parse("2024-05-06").strftime("%Y-%m-%dT%H:%M:%SZ")
-            current_state = self.helper.get_state()
-            entities_list = self._get_indicators(
-                indicator_type="Url", last_run=last_run
-            )
-            entities_list = self.cleanup(entities_list)
+            # last_run = parse("2024-05-01").strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            file_path = "data"
-            self.dump_data(entities_list, file_path, "urls")
+            #timeframes = [1, 7]
+            timeframes = [1]
+            for timeframe in timeframes:
+                last_run = (
+                    datetime.now(tz=timezone.utc) - timedelta(days=timeframe)
+                ).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                current_state = self.helper.get_state()
+                indicator_types = ["url", "domain-name", "IPv4-Addr", "Artifact"]
+                for indicator_type in indicator_types:
+                    entities_list = self._get_indicators(
+                        indicator_type=indicator_type, last_run=last_run
+                    )
+                    entities_list = self.cleanup(entities_list)
+
+                    self.dump_data(
+                        entities_list,
+                        file_path=self.datafolder,
+                        file_name=indicator_type + "_" + str(timeframe) + "d",
+                        repo=repo
+                    )
+
 
             self.helper.log_info(
                 f"Connector ended, sleeping for {self.interval/60} minutes"
             )
-            # self.helper.set_state(
-            #    {
-            #        "last_run": now.timestamp(),
-            #    }
-            # )
+            self.helper.set_state(
+                {
+                    "last_run": datetime.now(tz=timezone.utc).timestamp(),
+                }
+            )
             time.sleep(self.interval)
 
 
 if __name__ == "__main__":
+    connectorExportGit = ExportGit()
+    connectorExportGit.run()
+    quit()
     try:
         connectorExportGit = ExportGit()
         connectorExportGit.run()

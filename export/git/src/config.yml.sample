@@ -9,6 +9,9 @@ connector:
   scope: 'text/csv'
   confidence_level: 50 # From 0 (Unknown) to 100 (Fully trusted)
   log_level: 'info'
-
+  datafolder: "C:/temp/data"
+  git_user: "WildDogOne"
+  git_password: "XXX"
+  git_repo: "github.com/WildDogOne/CTI.git"
 export-file-csv:
   delimiter: ';'
