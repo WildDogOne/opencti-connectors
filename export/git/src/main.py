@@ -519,7 +519,9 @@ if __name__ == "__main__":
     #connectorExportGit.run()
     #quit()
     try:
+        print("Starting")
         connectorExportGit = ExportGit()
+        print("Initialized")
         connectorExportGit.run()
     except Exception as e:
         print(e)
