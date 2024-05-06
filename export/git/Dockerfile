@@ -10,7 +10,7 @@ RUN apk --no-cache add git build-base libmagic libffi-dev && \
     cd /opt/opencti-connector-export-git && \
     pip3 install --no-cache-dir -r requirements.txt && \
     apk del git build-base
-RUN apt install git -y
+RUN apk add git
 # Expose and entrypoint
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
