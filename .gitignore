@@ -160,6 +160,6 @@ cython_debug/
 #.idea/
 config.yml
 .vscode/
-export/
 deduplication/
 .vscode/launch.json
+data/
