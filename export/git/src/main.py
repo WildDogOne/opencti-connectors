@@ -30,6 +30,7 @@ class ExportGit:
             )
             * 60
         )
+        self.helper.log_info(f"self.interval - {self.interval}")
         self.export_file_csv_delimiter = get_config_variable(
             "EXPORT_FILE_CSV_DELIMITER",
             ["export-file-csv", "delimiter"],
@@ -37,6 +38,7 @@ class ExportGit:
             False,
             ",",
         )
+        self.helper.log_info(f"self.export_file_csv_delimiter - {self.export_file_csv_delimiter}")
 
         self.datafolder = get_config_variable(
             "CONNECTOR_DATAFOLDER",
@@ -45,37 +47,43 @@ class ExportGit:
             False,
             "/tmp/export-git/",
         )
+        self.helper.log_info(f"self.datafolder - {self.datafolder}")
         self.git_user = get_config_variable(
             "CONNECTOR_GIT_USER",
             ["connector", "git_user"],
             config,
             False
         )
+        self.helper.log_info(f"self.git_user - {self.git_user}")
         self.git_password = get_config_variable(
             "CONNECTOR_GIT_PASSWORD",
             ["connector", "git_password"],
             config,
             False
         )
+        self.helper.log_info(f"self.git_password - {self.git_password}")
         self.git_repo = get_config_variable(
             "CONNECTOR_GIT_REPO",
             ["connector", "git_repo"],
             config,
             False
         )
+        self.helper.log_info(f"self.git_repo - {self.git_repo}")
         self.timeframes = get_config_variable(
             "CONNECTOR_TIMEFRAMES",
             ["connector", "timeframes"],
             config,
             False
         )
+        self.helper.log_info(f"self.timeframes - {self.timeframes}")
         if type(self.timeframes) is str:
             if "," in self.timeframes:
                 self.timeframes = self.timeframes.split(",")
             else:
                 self.timeframes = [self.timeframes]
+        self.helper.log_info(f"self.timeframes - {self.timeframes}")
         
-        self.helper.log_info(f"self.export_file_csv_delimiter - {self.export_file_csv_delimiter}\nself.datafolder - {self.datafolder}\nself.git_user - {self.git_user}\nself.git_password - {self.git_password}\nself.git_repo - {self.git_repo}\nself.timeframes - {self.timeframes}\n")
+        
 
 
     def export_dict_list_to_csv(self, data):
