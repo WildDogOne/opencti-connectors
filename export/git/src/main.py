@@ -505,9 +505,9 @@ class ExportGit:
 
 
 if __name__ == "__main__":
-    connectorExportGit = ExportGit()
-    connectorExportGit.run()
-    quit()
+    #connectorExportGit = ExportGit()
+    #connectorExportGit.run()
+    #quit()
     try:
         connectorExportGit = ExportGit()
         connectorExportGit.run()
