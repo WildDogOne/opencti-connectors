@@ -383,6 +383,7 @@ class ExportGit:
         return entities_list
 
     def dump_data(self, data, file_path=None, file_name=None, repo=None):
+        repo.remotes.origin.pull()
         csv = self.export_dict_list_to_csv(data)
         # Check if the directory exists
         if not os.path.exists(file_path):
@@ -397,9 +398,8 @@ class ExportGit:
 
         # Write the data to the CSV file
         full_path = os.path.join(file_path, file_name + ".csv")
-        with open(full_path, "w", newline="") as csvfile:
+        with open(full_path, "w", newline="", encoding='utf-8') as csvfile:
             csvfile.write(csv)
-
         add_file = [file_name + ".json", file_name + ".csv"]  # relative path from git root
         repo.index.add(add_file)  # notice the add function requires a list of paths
         repo.index.commit(f"Update {file_name}")
@@ -522,9 +522,9 @@ class ExportGit:
 
 
 if __name__ == "__main__":
-    #connectorExportGit = ExportGit()
-    #connectorExportGit.run()
-    #quit()
+    connectorExportGit = ExportGit()
+    connectorExportGit.run()
+    quit()
     try:
         connectorExportGit = ExportGit()
         connectorExportGit.run()
