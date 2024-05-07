@@ -483,7 +483,7 @@ class ExportGit:
             #timeframes = [1]
             for timeframe in self.timeframes:
                 last_run = (
-                    datetime.now(tz=timezone.utc) - timedelta(hours=timeframe)
+                    datetime.now(tz=timezone.utc) - timedelta(hours=int(timeframe))
                 ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
                 current_state = self.helper.get_state()
