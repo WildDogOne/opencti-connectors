@@ -70,9 +70,11 @@ class ExportGit:
         )
         if type(self.timeframes) is str:
             if "," in self.timeframes:
-                self.timeframes = self.timeframes.split(",")
+                self.timeframes = self.timeframes.replace(" ","").split(",")
             else:
                 self.timeframes = [self.timeframes]
+        if type(self.timeframes) is not list:
+            self.timeframes = [self.timeframes]
         
         
 
@@ -413,7 +415,6 @@ class ExportGit:
             "objectOrganization",
             "creators",
             "createdBy",
-            "objectLabel",
             "externalReferences",
             "indicators",
             "createdById",
@@ -446,7 +447,15 @@ class ExportGit:
                             ):
                                 output.append(x)
                                 continue
-
+        
+        # Remove Whitelisted artifacts
+        for x in output:
+            if "objectLabel" in x:
+                if len(x["objectLabel"]) > 0:
+                    for y in x["objectLabel"]:
+                        if y["value"] == "whitelist":
+                            output.remove(x)
+                            continue
 
         return output
 
