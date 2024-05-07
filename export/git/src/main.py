@@ -278,14 +278,12 @@ class ExportGit:
             #timeframes = [1]
             for timeframe in self.timeframes:
                 if timeframe.endswith("h"):
-                    timeframe = timeframe.replace("h", "")
                     last_run = (
-                        datetime.now(tz=timezone.utc) - timedelta(hours=int(timeframe))
+                        datetime.now(tz=timezone.utc) - timedelta(hours=int(timeframe.replace("h", "")))
                     ).strftime("%Y-%m-%dT%H:%M:%SZ")
                 elif timeframe.endswith("d"):
-                    timeframe = timeframe.replace("d", "")
                     last_run = (
-                        datetime.now(tz=timezone.utc) - timedelta(days=int(timeframe))
+                        datetime.now(tz=timezone.utc) - timedelta(days=int(timeframe.replace("d", "")))
                     ).strftime("%Y-%m-%dT%H:%M:%SZ")
                 else:
                     self.helper.log_error(f"Timeframe not supported: {timeframe}")
@@ -302,7 +300,7 @@ class ExportGit:
                     self.dump_data(
                         entities_list,
                         file_path=self.datafolder,
-                        file_name=indicator_type + "_" + str(timeframe) + "h",
+                        file_name=indicator_type + "_" + str(timeframe),
                         repo=repo
                     )
 
