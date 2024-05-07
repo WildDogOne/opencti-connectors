@@ -199,7 +199,9 @@ class ExportGit:
         repo.index.add(add_file)  # notice the add function requires a list of paths
         repo.index.commit(f"Update {file_name}")
         origin = repo.remote(name='origin')
-        origin.push()
+        response = origin.push()
+        from pprint import pprint
+        pprint(response)
 
     def cleanup(self, data):
         cleanups = [
