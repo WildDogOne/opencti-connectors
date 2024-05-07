@@ -72,8 +72,7 @@ class ExportGit:
         self.timeframes = get_config_variable(
             "CONNECTOR_TIMEFRAMES",
             ["connector", "timeframes"],
-            config,
-            True
+            config
         )
         print(f"self.timeframes - {self.timeframes}")
         if type(self.timeframes) is str:
