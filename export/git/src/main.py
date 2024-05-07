@@ -146,209 +146,6 @@ class ExportGit:
         writer.writerows(csv_data)
         return output.getvalue()
 
-    def _process_message(self, data):
-        file_name = data["file_name"]
-        export_scope = data["export_scope"]  # query or selection or single
-        export_type = data["export_type"]  # Simple or Full
-        file_markings = data["file_markings"]
-        entity_id = data.get("entity_id")
-        entity_type = data["entity_type"]
-        main_filter = data.get("main_filter")
-        access_filter = data.get("access_filter")
-
-        if export_scope == "single":
-            self.helper.connector_logger.info(
-                "Exporting",
-                {
-                    "entity_id": entity_id,
-                    "export_type": export_type,
-                    "file_name": file_name,
-                },
-            )
-            entity_data = self.helper.api_impersonate.stix_domain_object.read(
-                id=entity_id
-            )
-            if entity_data is None:
-                entity_data = self.helper.api_impersonate.stix_cyber_observable.read(
-                    id=entity_id
-                )
-            if entity_data is None:
-                raise ValueError(
-                    "Unable to read/access to the entity, please check that the connector permission. Please note that all export files connectors should have admin permission as they impersonate the user requesting the export to avoir data leak."
-                )
-            entities_list = []
-            object_ids = entity_data.get("objectsIds")
-            if object_ids is not None and len(object_ids) != 0:
-                export_selection_filter = {
-                    "mode": "and",
-                    "filterGroups": [
-                        {
-                            "mode": "or",
-                            "filters": [
-                                {
-                                    "key": "id",
-                                    "values": entity_data["objectsIds"],
-                                }
-                            ],
-                            "filterGroups": [],
-                        },
-                        access_filter,
-                    ],
-                    "filters": [],
-                }
-
-                entities_sdo = self.helper.api_impersonate.stix_domain_object.list(
-                    filters=export_selection_filter
-                )
-                entities_sco = self.helper.api_impersonate.stix_cyber_observable.list(
-                    filters=export_selection_filter
-                )
-
-                entities_list = entities_sdo + entities_sco
-                for entity in entities_list:
-                    del entity["objectLabelIds"]
-                del entity_data["objectsIds"]
-            if "objectLabelIds" in entity_data:
-                del entity_data["objectLabelIds"]
-            entities_list.append(entity_data)
-            csv_data = self.export_dict_list_to_csv(entities_list)
-            self.helper.connector_logger.info(
-                "Uploading",
-                {
-                    "entity_id": entity_id,
-                    "export_type": export_type,
-                    "file_name": file_name,
-                    "file_markings": file_markings,
-                },
-            )
-            self.helper.api.stix_domain_object.push_entity_export(
-                entity_id, file_name, csv_data, file_markings
-            )
-            self.helper.connector_logger.info(
-                "Export done",
-                {
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                    "export_type": export_type,
-                    "file_name": file_name,
-                    "file_markings": file_markings,
-                },
-            )
-
-        else:  # list export: export_scope = 'query' or 'selection'
-            if export_scope == "selection":
-                list_filters = "selected_ids"
-
-                entity_data_sdo = self.helper.api_impersonate.stix_domain_object.list(
-                    filters=main_filter
-                )
-                entity_data_sco = (
-                    self.helper.api_impersonate.stix_cyber_observable.list(
-                        filters=main_filter
-                    )
-                )
-                entity_data_scr = (
-                    self.helper.api_impersonate.stix_core_relationship.list(
-                        filters=main_filter
-                    )
-                )
-                entity_data_ssr = (
-                    self.helper.api_impersonate.stix_sighting_relationship.list(
-                        filters=main_filter
-                    )
-                )
-
-                entities_list = (
-                    entity_data_sdo
-                    + entity_data_sco
-                    + entity_data_scr
-                    + entity_data_ssr
-                )
-
-                if entities_list is None:
-                    raise ValueError(
-                        "Unable to read/access to the entity, please check that the connector permission. Please note that all export files connectors should have admin permission as they impersonate the user requesting the export to avoir data leak."
-                    )
-
-            else:  # export_scope = 'query'
-                list_params = data["list_params"]
-                list_params_filters = list_params.get("filters")
-                access_filter_content = access_filter.get("filters")
-
-                self.helper.connector_logger.info(
-                    "Exporting list: ",
-                    {
-                        "entity_type": entity_type,
-                        "export_type": export_type,
-                        "file_name": file_name,
-                    },
-                )
-
-                if len(access_filter_content) != 0 and list_params_filters is not None:
-                    export_query_filter = {
-                        "mode": "and",
-                        "filterGroups": [list_params_filters, access_filter],
-                        "filters": [],
-                    }
-                elif len(access_filter_content) == 0:
-                    export_query_filter = list_params_filters
-                else:
-                    export_query_filter = access_filter
-
-                entities_list = self.helper.api_impersonate.stix2.export_entities_list(
-                    entity_type=entity_type,
-                    search=list_params.get("search"),
-                    filters=export_query_filter,
-                    orderBy=list_params["orderBy"],
-                    orderMode=list_params["orderMode"],
-                    getAll=True,
-                )
-                list_filters = json.dumps(list_params)
-
-            if entities_list is not None:
-                csv_data = self.export_dict_list_to_csv(entities_list)
-                self.helper.log_info(
-                    "Uploading: " + entity_type + "/" + export_type + " to " + file_name
-                )
-                if entity_type == "Stix-Cyber-Observable":
-                    self.helper.api.stix_cyber_observable.push_list_export(
-                        entity_id,
-                        entity_type,
-                        file_name,
-                        file_markings,
-                        csv_data,
-                        list_filters,
-                    )
-                elif entity_type == "Stix-Core-Object":
-                    self.helper.api.stix_core_object.push_list_export(
-                        entity_id,
-                        entity_type,
-                        file_name,
-                        file_markings,
-                        csv_data,
-                        list_filters,
-                    )
-                else:
-                    self.helper.api.stix_domain_object.push_list_export(
-                        entity_id,
-                        entity_type,
-                        file_name,
-                        file_markings,
-                        csv_data,
-                        list_filters,
-                    )
-                self.helper.connector_logger.info(
-                    "Export done",
-                    {
-                        "entity_type": entity_type,
-                        "export_type": export_type,
-                        "file_name": file_name,
-                    },
-                )
-            else:
-                raise ValueError("An error occurred, the list is empty")
-
-        return "Export done"
 
     def _get_indicators(self, indicator_type=None, last_run=None):
         # now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -368,10 +165,6 @@ class ExportGit:
         else:
             self.helper.log_error("No indicator type provided")
             quit()
-        # if indicator_type.lower() == "artifact":
-        #    filters["filters"].append(
-        #        {"key": "objectLabel", "values": ["whitelist"]},
-        #    )
         entities_list = self.helper.api_impersonate.stix2.export_entities_list(
             entity_type=indicator_type,
             # search="google",
@@ -383,23 +176,25 @@ class ExportGit:
         return entities_list
 
     def dump_data(self, data, file_path=None, file_name=None, repo=None):
+        self.helper.log_info(f"Pulling latest changes from {self.git_repo}")
         repo.remotes.origin.pull()
+        self.helper.log_info("Converting JSON data to CSV")
         csv = self.export_dict_list_to_csv(data)
-        # Check if the directory exists
-        if not os.path.exists(file_path):
-            # If the directory doesn't exist, create it
-            os.makedirs(file_path)
 
         # Specify the path to the CSV file
         full_path = os.path.join(file_path, file_name + ".json")
 
+        self.helper.log_info("Writing JSON Output")
         with open(full_path, "w") as f:
             json.dump(data, f, indent=4)
 
+        self.helper.log_info("Writing CSV Output")
         # Write the data to the CSV file
         full_path = os.path.join(file_path, file_name + ".csv")
         with open(full_path, "w", newline="", encoding='utf-8') as csvfile:
             csvfile.write(csv)
+        
+        self.helper.log_info("Adding files to git and pushing to remote")
         add_file = [file_name + ".json", file_name + ".csv"]  # relative path from git root
         repo.index.add(add_file)  # notice the add function requires a list of paths
         repo.index.commit(f"Update {file_name}")
