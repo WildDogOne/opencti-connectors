@@ -13,5 +13,8 @@ connector:
   git_user: "WildDogOne"
   git_password: "XXX"
   git_repo: "github.com/WildDogOne/CTI.git"
+  timeframes:
+    - 1
+    - 24
 export-file-csv:
   delimiter: ';'

@@ -73,7 +73,7 @@ class ExportGit:
             "CONNECTOR_TIMEFRAMES",
             ["connector", "timeframes"],
             config,
-            False
+            True
         )
         print(f"self.timeframes - {self.timeframes}")
         if type(self.timeframes) is str:
