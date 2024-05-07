@@ -14,7 +14,7 @@ connector:
   git_password: "XXX"
   git_repo: "github.com/WildDogOne/CTI.git"
   timeframes:
-    - 1
-    - 24
+    - "1h"
+    - "1d"
 export-file-csv:
   delimiter: ';'

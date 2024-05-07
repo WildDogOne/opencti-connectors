@@ -480,9 +480,19 @@ class ExportGit:
             #timeframes = [1, 7]
             #timeframes = [1]
             for timeframe in self.timeframes:
-                last_run = (
-                    datetime.now(tz=timezone.utc) - timedelta(hours=int(timeframe))
-                ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                if timeframe.endswith("h"):
+                    timeframe = timeframe.replace("h", "")
+                    last_run = (
+                        datetime.now(tz=timezone.utc) - timedelta(hours=int(timeframe))
+                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                elif timeframe.endswith("d"):
+                    timeframe = timeframe.replace("d", "")
+                    last_run = (
+                        datetime.now(tz=timezone.utc) - timedelta(days=int(timeframe))
+                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                else:
+                    self.helper.log_error(f"Timeframe not supported: {timeframe}")
+                    quit()
 
                 current_state = self.helper.get_state()
                 indicator_types = ["url", "domain-name", "IPv4-Addr", "Artifact"]
