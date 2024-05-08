@@ -6,9 +6,13 @@ By default it will try to do a local deduplication against a locally stored json
 If you want to persist this json, you can map it to a volume
 
 Known working sources:
-- https://openphish.com/feed.txt
-- https://phishing.army/download/phishing_army_blocklist.txt
-- https://www.binarydefense.com/banlist.txt
+
+| Service          | URL                                                                 |
+| ---------------- | ------------------------------------------------------------------- |
+| Openphish        | https://openphish.com/feed.txt                                      |
+| Phishing Army    | https://phishing.army/download/phishing_army_blocklist.txt          |
+| Binarydefense    | https://www.binarydefense.com/banlist.txt                           |
+| Feodo Tracker C2 | https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt |
 
 
 ## Installation
@@ -30,7 +34,7 @@ Known working sources:
 | `connector_log_level`        | `CONNECTOR_LOG_LEVEL`        | Yes       | The log level for this connector, could be `debug`, `info`, `warn` or `error` (less verbose). |
 | `connector_interval`         | `CONNECTOR_INTERVAL`         | Yes       | The interval in Minutes, make this appropriate to the source                                  |
 | `connector_url`              | `CONNECTOR_URL`              | Yes       | The URL of the textfile                                                                       |
-| `connector_ioc_type`         | `CONNECTOR_IOC_TYPE`         | Yes       | The IOC Type, should be one of: domain, ipv4, url, sha256, md5                                  |
+| `connector_ioc_type`         | `CONNECTOR_IOC_TYPE`         | Yes       | The IOC Type, should be one of: domain, ipv4, url, sha256, md5                                |
 | `connector_labels`           | `CONNECTOR_LABELS`           | Yes       | The Labels to attach, comma seperated array                                                   |
 | `connector_description`      | `CONNECTOR_DESCRIPTION`      | Yes       | The description which should be added to the indicators/observables                           |
 | `connector_deduplication`    | `CONNECTOR_DEDUPLICATION`    | No        | Set to false if you don't want to deduplicate                                                 |
