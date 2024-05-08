@@ -46,38 +46,24 @@ class ExportGit:
             "/tmp/export-git/",
         )
         self.git_user = get_config_variable(
-            "CONNECTOR_GIT_USER",
-            ["connector", "git_user"],
-            config,
-            False
+            "CONNECTOR_GIT_USER", ["connector", "git_user"], config, False
         )
         self.git_password = get_config_variable(
-            "CONNECTOR_GIT_PASSWORD",
-            ["connector", "git_password"],
-            config,
-            False
+            "CONNECTOR_GIT_PASSWORD", ["connector", "git_password"], config, False
         )
         self.git_repo = get_config_variable(
-            "CONNECTOR_GIT_REPO",
-            ["connector", "git_repo"],
-            config,
-            False
+            "CONNECTOR_GIT_REPO", ["connector", "git_repo"], config, False
         )
         self.timeframes = get_config_variable(
-            "CONNECTOR_TIMEFRAMES",
-            ["connector", "timeframes"],
-            config
+            "CONNECTOR_TIMEFRAMES", ["connector", "timeframes"], config
         )
         if type(self.timeframes) is str:
             if "," in self.timeframes:
-                self.timeframes = self.timeframes.replace(" ","").split(",")
+                self.timeframes = self.timeframes.replace(" ", "").split(",")
             else:
                 self.timeframes = [self.timeframes]
         if type(self.timeframes) is not list:
             self.timeframes = [self.timeframes]
-        
-        
-
 
     def export_dict_list_to_csv(self, data):
         output = io.StringIO()
@@ -146,7 +132,6 @@ class ExportGit:
         writer.writerows(csv_data)
         return output.getvalue()
 
-
     def _get_indicators(self, indicator_type=None, last_run=None):
         # now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         filters = {
@@ -184,24 +169,25 @@ class ExportGit:
         # Specify the path to the CSV file
         full_path = os.path.join(file_path, file_name + ".json")
 
-        self.helper.log_info("Writing JSON Output")
+        self.helper.log_info(f"Writing JSON Output to {full_path}")
         with open(full_path, "w") as f:
             json.dump(data, f, indent=4)
 
-        self.helper.log_info("Writing CSV Output")
+        self.helper.log_info(f"Writing CSV Output to {full_path}")
         # Write the data to the CSV file
         full_path = os.path.join(file_path, file_name + ".csv")
-        with open(full_path, "w", newline="", encoding='utf-8') as csvfile:
+        with open(full_path, "w", newline="", encoding="utf-8") as csvfile:
             csvfile.write(csv)
-        
-        self.helper.log_info("Adding files to git and pushing to remote")
-        add_file = [file_name + ".json", file_name + ".csv"]  # relative path from git root
+
+        self.helper.log_info(f"Adding {file_name} to git and pushing")
+        add_file = [
+            file_name + ".json",
+            file_name + ".csv",
+        ]  # relative path from git root
         repo.index.add(add_file)  # notice the add function requires a list of paths
         repo.index.commit(f"Update {file_name}")
-        origin = repo.remote(name='origin')
+        origin = repo.remote(name="origin")
         response = origin.push()
-        from pprint import pprint
-        pprint(response)
 
     def cleanup(self, data):
         cleanups = [
@@ -239,12 +225,12 @@ class ExportGit:
                             if (
                                 y["definition"] == "TLP:GREEN"
                                 or y["definition"] == "TLP:CLEAR"
-                                #or y["definition"] == "PAP:GREEN"
-                                #or y["definition"] == "PAP:CLEAR"
+                                # or y["definition"] == "PAP:GREEN"
+                                # or y["definition"] == "PAP:CLEAR"
                             ):
                                 output.append(x)
                                 continue
-        
+
         # Remove Whitelisted artifacts
         for x in output:
             if "objectLabel" in x:
@@ -264,26 +250,27 @@ class ExportGit:
             repo = Repo.clone_from(remote, self.datafolder)
         return repo
 
-
-
     def run(self):
         from dateutil.parser import parse
+
         repo = self.initialize_git()
 
         while True:
             self.helper.log_info("Connector started")
             # last_run = parse("2024-05-01").strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            #timeframes = [1, 7]
-            #timeframes = [1]
+            # timeframes = [1, 7]
+            # timeframes = [1]
             for timeframe in self.timeframes:
                 if timeframe.endswith("h"):
                     last_run = (
-                        datetime.now(tz=timezone.utc) - timedelta(hours=int(timeframe.replace("h", "")))
+                        datetime.now(tz=timezone.utc)
+                        - timedelta(hours=int(timeframe.replace("h", "")))
                     ).strftime("%Y-%m-%dT%H:%M:%SZ")
                 elif timeframe.endswith("d"):
                     last_run = (
-                        datetime.now(tz=timezone.utc) - timedelta(days=int(timeframe.replace("d", "")))
+                        datetime.now(tz=timezone.utc)
+                        - timedelta(days=int(timeframe.replace("d", "")))
                     ).strftime("%Y-%m-%dT%H:%M:%SZ")
                 else:
                     self.helper.log_error(f"Timeframe not supported: {timeframe}")
@@ -301,9 +288,8 @@ class ExportGit:
                         entities_list,
                         file_path=self.datafolder,
                         file_name=indicator_type + "_" + str(timeframe),
-                        repo=repo
+                        repo=repo,
                     )
-
 
             self.helper.log_info(
                 f"Connector ended, sleeping for {self.interval/60} minutes"
