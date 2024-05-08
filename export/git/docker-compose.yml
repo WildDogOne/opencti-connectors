@@ -4,16 +4,16 @@ services:
     build: ./export/git/
     container_name: connector-export-git
     environment:
-      - OPENCTI_URL=http://localhost
-      - OPENCTI_TOKEN=ChangeMe
-      - CONNECTOR_ID=ChangeMe
-      - CONNECTOR_NAME=ExportFileCsv
-      - CONNECTOR_SCOPE=text/csv
-      - CONNECTOR_LOG_LEVEL=error
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${UUID}
+      - CONNECTOR_NAME=ExportGit
+      - CONNECTOR_LOG_LEVEL=info
       - "EXPORT_FILE_CSV_DELIMITER=,"
       - CONNECTOR_DATAFOLDER=/tmp/data
       - CONNECTOR_GIT_USER=WildDogOne
-      - CONNECTOR_GIT_PASSWORD=
+      - CONNECTOR_GIT_PASSWORD=${GITHUB_TOKEN}
       - CONNECTOR_GIT_REPO=github.com/WildDogOne/CTI.git
-      - CONNECTOR_TIMEFRAMES = 1,24
+      - CONNECTOR_TIMEFRAMES=1h,24h # Timeframes in hours (h) or days (d)
+      - CONNECTOR_INTERVAL=60 # In minutes
     restart: always
