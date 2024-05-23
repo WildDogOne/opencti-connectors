@@ -7,12 +7,15 @@ If you want to persist this json, you can map it to a volume
 
 Known working sources:
 
-| Service          | URL                                                                 |
-| ---------------- | ------------------------------------------------------------------- |
-| Openphish        | https://openphish.com/feed.txt                                      |
-| Phishing Army    | https://phishing.army/download/phishing_army_blocklist.txt          |
-| Binarydefense    | https://www.binarydefense.com/banlist.txt                           |
-| Feodo Tracker C2 | https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt |
+| Service                               | URL                                                                 | Type |
+| ------------------------------------- | ------------------------------------------------------------------- | ---- |
+| Openphish                             | https://openphish.com/feed.txt                                      |      |
+| Phishing Army                         | https://phishing.army/download/phishing_army_blocklist.txt          |      |
+| Binarydefense                         | https://www.binarydefense.com/banlist.txt                           |      |
+| Feodo Tracker C2                      | https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt |      |
+| Rescure IP Blacklist (might work)     | https://rescure.me/rescure_blacklist.txt                            |      |
+| Rescure Domain Blacklist (might work) | https://rescure.me/rescure_domain_blacklist.txt                     |      |
+| SecurityScorecard                     |                                                                     | IPv4 |
 
 
 ## Installation

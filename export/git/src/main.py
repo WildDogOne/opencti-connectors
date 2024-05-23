@@ -6,6 +6,7 @@ import sys
 import time
 from datetime import datetime, timezone, timedelta
 from git import Repo
+import gzip
 
 import yaml
 from pycti import OpenCTIConnectorHelper, get_config_variable
@@ -53,6 +54,9 @@ class ExportGit:
         )
         self.git_repo = get_config_variable(
             "CONNECTOR_GIT_REPO", ["connector", "git_repo"], config, False
+        )
+        self.gz = get_config_variable(
+            "CONNECTOR_GZ", ["connector", "gz"], config, False
         )
         self.timeframes = get_config_variable(
             "CONNECTOR_TIMEFRAMES", ["connector", "timeframes"], config
@@ -172,6 +176,13 @@ class ExportGit:
         self.helper.log_info(f"Writing JSON Output to {full_path}")
         with open(full_path, "w") as f:
             json.dump(data, f, indent=4)
+        if self.gz:
+            self.helper.log_info(f"Compressing JSON Output to {full_path}.gz")
+            with open(full_path, "rb") as f_in:
+                with gzip.open(full_path + ".gz", "wb") as f_out:
+                    f_out.writelines(f_in)
+            # Remove the original file
+            os.remove(full_path)
 
         self.helper.log_info(f"Writing CSV Output to {full_path}")
         # Write the data to the CSV file
@@ -179,11 +190,23 @@ class ExportGit:
         with open(full_path, "w", newline="", encoding="utf-8") as csvfile:
             csvfile.write(csv)
 
+        if self.gz:
+            self.helper.log_info(f"Compressing CSV Output to {full_path}.gz")
+            with open(full_path, "rb") as f_in:
+                with gzip.open(full_path + ".gz", "wb") as f_out:
+                    f_out.writelines(f_in)
+            # Remove the original file
+            os.remove(full_path)
+
         self.helper.log_info(f"Adding {file_name} to git and pushing")
-        add_file = [
-            file_name + ".json",
-            file_name + ".csv",
-        ]  # relative path from git root
+        add_file = []  # relative path from git root
+        if self.gz:
+            add_file.append(file_name + ".json.gz")
+            add_file.append(file_name + ".csv.gz")
+        else:
+            add_file.append(file_name + ".json")
+            add_file.append(file_name + ".csv")
+
         repo.index.add(add_file)  # notice the add function requires a list of paths
         repo.index.commit(f"Update {file_name}")
         origin = repo.remote(name="origin")
