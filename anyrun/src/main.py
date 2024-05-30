@@ -125,9 +125,15 @@ class Anyrun:
                 urls = []
 
             browser.close()
+        sha256 = []
+        for hash in hashes:
+            if len(hash) == 64:
+                sha256.append(hash)
+            else:
+                print(f"Invalid SHA256 hash: {hash}")
         iocs = {
             "ipv4": ipAddresses,
-            #"hashes": hashes,
+            "sha256": sha256,
             "domain": domains,
             "url": urls
         }
