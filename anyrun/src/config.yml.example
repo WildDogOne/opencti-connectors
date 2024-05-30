@@ -1,0 +1,16 @@
+opencti:
+  url: 'http://localhost:8080'
+  token: 'ChangeMe'
+
+connector:
+  id: 'Unique UUID'
+  type: 'EXTERNAL_IMPORT'
+  name: 'Text Connectors'
+  scope: 'textimport'
+  confidence_level: 50
+  update_existing_data: True
+  log_level: 'info'
+  openphish: True
+  phishingarmy: True
+  interval: 360 # Required, in minutes
+  deduplication: True

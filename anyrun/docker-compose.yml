@@ -1,0 +1,23 @@
+version: '3'
+services:
+  connector-anyrun-malware-trends:
+    build: ./txt/
+    container_name: connector-anyrun-malware-trends
+    # The txt connector will always try to do a local deduplication
+    # If you want this to be persistent, you need to mount a volume
+    # Add "CONNECTOR_DEDUPLICATE=False" to the .env file to disable deduplication
+    volumes:
+      - ./deduplication/${TI Source Name}:/tmp/deduplication
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${Unique UUID}
+      - "CONNECTOR_NAME=anyrun malware trends"
+      - CONNECTOR_SCOPE=anyrun malware trends
+      - CONNECTOR_CONFIDENCE_LEVEL=25
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_INTERVAL=60 # Time to wait in minutes between subsequent requests
+      - CONNECTOR_LABELS=malware
+      - CONNECTOR_DESCRIPTION=Anyrun Malware Trends
+      - CONNECTOR_DEDUPLICATE=True
+    restart: always
