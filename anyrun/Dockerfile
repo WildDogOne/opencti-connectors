@@ -8,7 +8,7 @@ COPY src /opt/wild-connectors
 # hadolint ignore=DL3003
 RUN apt update 
 RUN apt upgrade -y
-RUN apt install git python3-pip python-is-python3 -y
+RUN apt install git python3-pip python-is-python3 libmagic1 -y
 RUN cd /opt/wild-connectors && pip3 install --no-cache-dir -r requirements.txt 
 RUN apt clean 
 #RUN playwright install
