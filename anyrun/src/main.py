@@ -101,26 +101,36 @@ class Anyrun:
         if url is None:
             self.helper.log_error("No URL provided")
             quit()
-        
-
         with sync_playwright() as p:
             browser = p.chromium.launch()
             context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
             page = context.new_page()
-
-            ipAddresses = page.eval_on_selector_all('.additionalData__list .list__item')
-            hashes = page.eval_on_selector_all('#hashData .additionalData__list .list__item')
-            domains = page.eval_on_selector_all('#domainData .additionalData__list .list__item')
-            urls = page.eval_on_selector_all('#urlData .additionalData__list .list__item')
-
-            print('IP Addresses:', ipAddresses);
-            print('Hashes:', hashes);
-            print('Domains:', domains);
-            print('URLs:', urls);
             page.goto(url)
-            iocs = page.eval_on_selector_all(".table-list__item a", "nodes => nodes.map(n => n.href)")
+
+            try:
+                ipAddresses = [el.inner_text() for el in page.query_selector_all('#ipData .list__item')]
+            except:
+                ipAddresses = []
+            try:
+                hashes = [el.inner_text() for el in page.query_selector_all('#hashData .list__item')]
+            except:
+                hashes = []
+            try:
+                domains = [el.inner_text() for el in page.query_selector_all('#domainData .list__item')]
+            except:
+                domains = []
+            try:
+                urls = [el.inner_text() for el in page.query_selector_all('#urlData .list__item')]
+            except:
+                urls = []
+
             browser.close()
-        quit()
+        iocs = {
+            "ipv4": ipAddresses,
+            #"hashes": hashes,
+            "domain": domains,
+            "url": urls
+        }
         return iocs
         
     def run(self):
@@ -156,8 +166,45 @@ class Anyrun:
                 urls = self.get_anyrun_urls()
                 for url in urls:
                     print(url)
-                    self.get_anyrun_iocs(url)
-                quit()
+                    iocs = self.get_anyrun_iocs(url)
+                    for ioc_type in iocs:
+                        print(ioc_type)
+                        from pprint import pprint
+                        pprint(iocs[ioc_type])
+                   
+                        if len(iocs[ioc_type]) == 0:
+                            continue
+                        observables = self.create_observables(
+                            iocs[ioc_type],
+                            ioc_type=ioc_type,
+                            description=self.description,
+                            labels=self.labels,
+                        )
+                        indicators = self.create_indicators(
+                            observables,  
+                            ioc_type=ioc_type,
+                            description=self.description,
+                            labels=self.labels,
+                        )
+                        relationships = self.create_relationships(observables, indicators)
+                        bundle = self.create_bundle(observables, indicators, relationships)
+                        self.send_bundle(bundle, work_id)
+                message = (
+                    "Connector successfully run ("
+                    + str((len(indicators) + len(observables) + len(relationships)))
+                    + " events have been processed), storing last_run as "
+                    + str(now)
+                )
+                self.helper.log_info(message)
+
+                self.helper.set_state(
+                    {
+                        "last_run": now.timestamp(),
+                    }
+                )
+                time.sleep(self.interval)
+                
+                """
                 self.helper.log_debug(f"URL to pull: {self.url}")
                 self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
                 self.helper.log_debug(f"Description to use: {self.description}")
@@ -186,35 +233,8 @@ class Anyrun:
                     cleaned_iocs = iocs
                     self.helper.log_info("Deduplication is disabled")
                 # Remove old indicators from memory
-                observables = self.create_observables(
-                    cleaned_iocs,
-                    ioc_type=self.ioc_type,
-                    description=self.description,
-                    labels=self.labels,
-                )
-                indicators = self.create_indicators(
-                    observables,
-                    ioc_type=self.ioc_type,
-                    description=self.description,
-                    labels=self.labels,
-                )
-                relationships = self.create_relationships(observables, indicators)
-                bundle = self.create_bundle(observables, indicators, relationships)
-                self.send_bundle(bundle, work_id)
-                message = (
-                    "Connector successfully run ("
-                    + str((len(indicators) + len(observables) + len(relationships)))
-                    + " events have been processed), storing last_run as "
-                    + str(now)
-                )
-                self.helper.log_info(message)
+                """
 
-                self.helper.set_state(
-                    {
-                        "last_run": now.timestamp(),
-                    }
-                )
-                time.sleep(self.interval)
 
             except (KeyboardInterrupt, SystemExit):
                 self.helper.log_info("Connector stop")
@@ -302,6 +322,7 @@ class Anyrun:
                 )
             else:
                 self.helper.log_error("Failed to determine IOC type")
+                quit()
 
             observables.append(observable)
         return observables
