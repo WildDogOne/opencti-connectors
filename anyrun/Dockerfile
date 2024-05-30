@@ -1,4 +1,4 @@
-FROM python:3.11-alpine
+FROM python:3.11-alpine3.20
 ENV CONNECTOR_TYPE=EXTERNAL_IMPORT
 
 # Copy the connector
