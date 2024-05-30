@@ -12,6 +12,7 @@ RUN apk update && apk upgrade && \
     pip3 install --no-cache-dir -r requirements.txt && \
     apk del git build-base && \
     rm -rf /var/cache/apk/*
+RUN playwright install
 
 # Expose and entrypoint
 COPY entrypoint.sh /

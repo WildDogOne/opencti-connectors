@@ -13,7 +13,7 @@ from pycti import (
     StixCoreRelationship,
     get_config_variable,
 )
-
+from playwright.sync_api import sync_playwright
 
 class Anyrun:
     """
@@ -86,15 +86,43 @@ class Anyrun:
     def get_anyrun_urls(self, url=None):
         if url is None:
             url = "https://any.run/malware-trends/"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
-        from requests_html import HTMLSession
-        session = HTMLSession()
-        r = session.get(url)
-        r.html.render()  # this call executes the js in the page
+        
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+            page = context.new_page()
+            page.goto(url)
+            hrefs = page.eval_on_selector_all(".table-list__item a", "nodes => nodes.map(n => n.href)")
+            browser.close()
 
-        from pprint import pprint
-        pprint(r.text)
+        return hrefs
+    
+    def get_anyrun_iocs(self, url=None):
+        if url is None:
+            self.helper.log_error("No URL provided")
+            quit()
+        
 
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+            page = context.new_page()
+
+            ipAddresses = page.eval_on_selector_all('.additionalData__list .list__item')
+            hashes = page.eval_on_selector_all('#hashData .additionalData__list .list__item')
+            domains = page.eval_on_selector_all('#domainData .additionalData__list .list__item')
+            urls = page.eval_on_selector_all('#urlData .additionalData__list .list__item')
+
+            print('IP Addresses:', ipAddresses);
+            print('Hashes:', hashes);
+            print('Domains:', domains);
+            print('URLs:', urls);
+            page.goto(url)
+            iocs = page.eval_on_selector_all(".table-list__item a", "nodes => nodes.map(n => n.href)")
+            browser.close()
+        quit()
+        return iocs
+        
     def run(self):
         """Running component of class"""
         while True:
@@ -125,7 +153,10 @@ class Anyrun:
                     self.helper.log_info(
                         f"{filename} does not exist. No deduplication will be performed."
                     )
-                self.get_anyrun_urls()
+                urls = self.get_anyrun_urls()
+                for url in urls:
+                    print(url)
+                    self.get_anyrun_iocs(url)
                 quit()
                 self.helper.log_debug(f"URL to pull: {self.url}")
                 self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
