@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 import requests
 import stix2
+import stix2.hashes
 import yaml
 from pycti import (
     Identity,
@@ -322,6 +323,16 @@ class Anyrun:
                         "x_opencti_labels": labels,
                     },
                 )
+            elif ioc_type == "sha256":
+                    observable = stix2.hashes.Hash.SHA256(
+                    value=ioc,
+                    object_marking_refs=[stix2.TLP_WHITE],
+                    custom_properties={
+                        "x_opencti_description": description,
+                        "x_opencti_created_by_ref": f"{self.author.id}",
+                        "x_opencti_labels": labels,
+                    },
+                )
             else:
                 self.helper.log_error("Failed to determine IOC type")
                 quit()
@@ -351,6 +362,7 @@ class Anyrun:
             type_ioc = "File:hashes.'MD5'"
         else:
             self.helper.log_error("Failed to determine IOC type")
+            quit()
         indicators = []
         for observable in observables:
             pattern = f"[{type_ioc} = '{observable.value}']"
