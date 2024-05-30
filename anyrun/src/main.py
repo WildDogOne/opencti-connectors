@@ -167,11 +167,7 @@ class Anyrun:
                 for url in urls:
                     print(url)
                     iocs = self.get_anyrun_iocs(url)
-                    for ioc_type in iocs:
-                        print(ioc_type)
-                        from pprint import pprint
-                        pprint(iocs[ioc_type])
-                   
+                    for ioc_type in iocs:                   
                         if len(iocs[ioc_type]) == 0:
                             continue
                         observables = self.create_observables(
