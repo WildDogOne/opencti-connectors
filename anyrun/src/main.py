@@ -16,6 +16,7 @@ from pycti import (
 )
 from playwright.sync_api import sync_playwright
 
+
 class Anyrun:
     """
     Downloads Text file from URL
@@ -40,7 +41,6 @@ class Anyrun:
             name=name,
             identity_class="organization",
         )
-
 
         self.labels = get_config_variable(
             "CONNECTOR_LABELS",
@@ -80,48 +80,65 @@ class Anyrun:
         if self.deduplication is not False:
             self.deduplication = True
 
-
         self.deduplication_folder = "/tmp/deduplication"
         self.deduplication_file = "indicators.json"
 
     def get_anyrun_urls(self, url=None):
         if url is None:
             url = "https://any.run/malware-trends/"
-        
+
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            )
             page = context.new_page()
             page.goto(url)
-            hrefs = page.eval_on_selector_all(".table-list__item a", "nodes => nodes.map(n => n.href)")
+            hrefs = page.eval_on_selector_all(
+                ".table-list__item a", "nodes => nodes.map(n => n.href)"
+            )
             browser.close()
 
         return hrefs
-    
+
     def get_anyrun_iocs(self, url=None):
         if url is None:
             self.helper.log_error("No URL provided")
             quit()
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            )
             page = context.new_page()
             page.goto(url)
 
             try:
-                ipAddresses = [el.inner_text() for el in page.query_selector_all('#ipData .list__item')]
+                ipAddresses = [
+                    el.inner_text()
+                    for el in page.query_selector_all("#ipData .list__item")
+                ]
             except:
                 ipAddresses = []
             try:
-                hashes = [el.inner_text() for el in page.query_selector_all('#hashData .list__item')]
+                hashes = [
+                    el.inner_text()
+                    for el in page.query_selector_all("#hashData .list__item")
+                ]
             except:
                 hashes = []
             try:
-                domains = [el.inner_text() for el in page.query_selector_all('#domainData .list__item')]
+                domains = [
+                    el.inner_text()
+                    for el in page.query_selector_all("#domainData .list__item")
+                ]
             except:
                 domains = []
             try:
-                urls = [el.inner_text() for el in page.query_selector_all('#urlData .list__item')]
+                urls = [
+                    el.inner_text()
+                    for el in page.query_selector_all("#urlData .list__item")
+                ]
             except:
                 urls = []
 
@@ -132,14 +149,9 @@ class Anyrun:
                 sha256.append(hash)
             else:
                 print(f"Invalid SHA256 hash: {hash}")
-        iocs = {
-            "ipv4": ipAddresses,
-            "sha256": sha256,
-            "domain": domains,
-            "url": urls
-        }
+        iocs = {"ipv4": ipAddresses, "sha256": sha256, "domain": domains, "url": urls}
         return iocs
-        
+
     def run(self):
         """Running component of class"""
         while True:
@@ -172,25 +184,32 @@ class Anyrun:
                     )
                 urls = self.get_anyrun_urls()
                 for url in urls:
-                    print(url)
+                    threat = url.split("/")[-1]
+                    self.helper.log_info(f"Processing URL: {threat}")
                     iocs = self.get_anyrun_iocs(url)
-                    for ioc_type in iocs:                   
+                    labels = self.labels.append(threat)
+                    for ioc_type in iocs:
+                        self.helper.log_info(f"Processing {ioc_type}")
                         if len(iocs[ioc_type]) == 0:
                             continue
                         observables = self.create_observables(
                             iocs[ioc_type],
                             ioc_type=ioc_type,
                             description=self.description,
-                            labels=self.labels,
+                            labels=labels,
                         )
                         indicators = self.create_indicators(
-                            observables,  
+                            observables,
                             ioc_type=ioc_type,
                             description=self.description,
-                            labels=self.labels,
+                            labels=labels,
                         )
-                        relationships = self.create_relationships(observables, indicators)
-                        bundle = self.create_bundle(observables, indicators, relationships)
+                        relationships = self.create_relationships(
+                            observables, indicators
+                        )
+                        bundle = self.create_bundle(
+                            observables, indicators, relationships
+                        )
                         self.send_bundle(bundle, work_id)
                 message = (
                     "Connector successfully run ("
@@ -206,7 +225,7 @@ class Anyrun:
                     }
                 )
                 time.sleep(self.interval)
-                
+
                 """
                 self.helper.log_debug(f"URL to pull: {self.url}")
                 self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
@@ -237,7 +256,6 @@ class Anyrun:
                     self.helper.log_info("Deduplication is disabled")
                 # Remove old indicators from memory
                 """
-
 
             except (KeyboardInterrupt, SystemExit):
                 self.helper.log_info("Connector stop")
@@ -324,8 +342,9 @@ class Anyrun:
                     },
                 )
             elif ioc_type == "sha256":
-                    observable = stix2.hashes.Hash.SHA256(
-                    value=ioc,
+                observable = stix2.File(
+                    name=ioc,
+                    hashes={"SHA-256": ioc},
                     object_marking_refs=[stix2.TLP_WHITE],
                     custom_properties={
                         "x_opencti_description": description,
@@ -350,6 +369,7 @@ class Anyrun:
         :return: :class:`List` of STIX Indicators
         """
         self.helper.log_info("Creating STIX Indicators")
+        
         if ioc_type == "domain":
             type_ioc = "Domain-Name:value"
         elif ioc_type == "ipv4":
@@ -365,10 +385,14 @@ class Anyrun:
             quit()
         indicators = []
         for observable in observables:
-            pattern = f"[{type_ioc} = '{observable.value}']"
+            if ioc_type == "sha256":
+                value = observable.name
+            else:
+                value = observable.value
+            pattern = f"[{type_ioc} = '{value}']"
             indicator = stix2.Indicator(
                 id=Indicator.generate_id(pattern),
-                name=observable.value,
+                name=value,
                 description=description,
                 created_by_ref=f"{self.author.id}",
                 confidence=self.helper.connect_confidence_level,
@@ -445,6 +469,8 @@ class Anyrun:
 
 
 if __name__ == "__main__":
+    Anyrun = Anyrun()
+    Anyrun.run()
     try:
         Anyrun = Anyrun()
         Anyrun.run()
