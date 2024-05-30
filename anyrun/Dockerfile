@@ -1,4 +1,4 @@
-FROM python:3.11-alpine3.20
+FROM mcr.microsoft.com/playwright:v1.44.1-jammy
 ENV CONNECTOR_TYPE=EXTERNAL_IMPORT
 
 # Copy the connector
