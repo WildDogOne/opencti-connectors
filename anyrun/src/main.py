@@ -205,7 +205,7 @@ class Anyrun:
                             labels=labels,
                         )
                         relationships = self.create_relationships(
-                            observables, indicators
+                            observables, indicators, ioc_url=url
                         )
                         bundle = self.create_bundle(
                             observables, indicators, relationships
@@ -369,7 +369,7 @@ class Anyrun:
         :return: :class:`List` of STIX Indicators
         """
         self.helper.log_info("Creating STIX Indicators")
-        
+
         if ioc_type == "domain":
             type_ioc = "Domain-Name:value"
         elif ioc_type == "ipv4":
@@ -407,7 +407,7 @@ class Anyrun:
             indicators.append(indicator)
         return indicators
 
-    def create_relationships(self, observables, indicators):
+    def create_relationships(self, observables, indicators, ioc_url=None):
         """
         Creates a list of STIX Relationships between the given lists of STIX Observables and Indicators
 
@@ -417,6 +417,10 @@ class Anyrun:
         """
         self.helper.log_info("Creating STIX Relationships")
         relationships = []
+        external_reference = stix2.ExternalReference(
+            source_name="Anyrun Malware Trends",
+            url=ioc_url,
+        )
         for i in range(len(observables)):
             relationship = stix2.Relationship(
                 id=StixCoreRelationship.generate_id(
@@ -426,6 +430,7 @@ class Anyrun:
                 source_ref=indicators[i].id,
                 target_ref=observables[i].id,
                 object_marking_refs=[stix2.TLP_WHITE],
+                external_references=[external_reference]
             )
             relationships.append(relationship)
         return relationships
