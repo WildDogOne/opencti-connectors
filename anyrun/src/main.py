@@ -152,6 +152,34 @@ class Anyrun:
         iocs = {"ipv4": ipAddresses, "sha256": sha256, "domain": domains, "url": urls}
         return iocs
 
+    def dedup(self, iocs):
+        if not os.path.exists(self.deduplication_folder):
+            os.makedirs(self.deduplication_folder)
+
+        filename = self.deduplication_folder + "/" + self.deduplication_file
+        existing = []
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                existing = json.load(f)
+        else:
+            self.helper.log_info(
+                f"{filename} does not exist. No deduplication will be performed."
+            )
+
+        cleaned = {}
+        for ioc_type in iocs:
+            x = []
+            for ioc in iocs[ioc_type]:
+                if ioc not in existing:
+                    existing.append(ioc)
+                    x.append(ioc)
+            cleaned[ioc_type] = x
+
+
+        with open(filename, 'w') as f:
+            json.dump(existing, f, ensure_ascii=False, indent=4)
+        return cleaned
+
     def run(self):
         """Running component of class"""
         while True:
@@ -169,28 +197,15 @@ class Anyrun:
                     self.helper.log_info(f"Connector last ran at: {last_seen} (UTC)")
                 else:
                     self.helper.log_info("Connector has never run")
-                if self.deduplication:
-                    if not os.path.exists(self.deduplication_folder):
-                        os.makedirs(self.deduplication_folder)
-                    # TODO: Implement deduplication
-                    # READ Duplication JSON
-                    # Compare with current IOCs
-                    # Write new IOCs to JSON
-                # Read indicators from last run if they exist
-                filename = self.deduplication_folder + "/" + self.deduplication_file
-                old_indicators = []
-                if os.path.exists(filename):
-                    with open(filename, "r") as f:
-                        old_indicators = json.load(f)
-                else:
-                    self.helper.log_info(
-                        f"{filename} does not exist. No deduplication will be performed."
-                    )
+
                 urls = self.get_anyrun_urls()
                 for url in urls:
                     threat = url.split("/")[-1]
                     self.helper.log_info(f"Processing URL: {threat}")
                     iocs = self.get_anyrun_iocs(url)
+                    if self.deduplication:
+                        iocs = self.dedup(iocs)
+                    #quit()
                     labels = self.labels.append(threat)
                     for ioc_type in iocs:
                         self.helper.log_info(f"Processing {ioc_type}")
