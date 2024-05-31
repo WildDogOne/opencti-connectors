@@ -226,37 +226,6 @@ class Anyrun:
                 )
                 time.sleep(self.interval)
 
-                """
-                self.helper.log_debug(f"URL to pull: {self.url}")
-                self.helper.log_debug(f"IOC Type behind TXT File: {self.ioc_type}")
-                self.helper.log_debug(f"Description to use: {self.description}")
-                self.helper.log_debug(f"Labels to attach: {self.labels}")
-                self.helper.log_info("Running Text connector")
-                iocs = self.get_txt(url=self.url)
-
-                if self.deduplication is True:
-                    self.helper.log_info(f"Deduplicating list, current length: {len(iocs)}")
-                    self.helper.log_info(
-                        f"Deduplication array length: {len(old_indicators)}"
-                    )
-                    cleaned_iocs = []
-                    for ioc in iocs:
-                        if not ioc in old_indicators:
-                            cleaned_iocs.append(ioc)
-                            old_indicators.append(ioc)
-                    self.helper.log_info(f"IOCs new length: {len(cleaned_iocs)}")
-                    self.helper.log_info(f"Deduplicating list, new length: {len(iocs)}")
-                    with open(filename, "w") as f:
-                        self.helper.log_info(f"Writing IOCs to disk")
-                        json.dump(old_indicators, f)
-                    old_indicators = []
-                    iocs = []
-                else:
-                    cleaned_iocs = iocs
-                    self.helper.log_info("Deduplication is disabled")
-                # Remove old indicators from memory
-                """
-
             except (KeyboardInterrupt, SystemExit):
                 self.helper.log_info("Connector stop")
                 exit(0)
@@ -430,7 +399,7 @@ class Anyrun:
                 source_ref=indicators[i].id,
                 target_ref=observables[i].id,
                 object_marking_refs=[stix2.TLP_WHITE],
-                external_references=[external_reference]
+                external_references=[external_reference],
             )
             relationships.append(relationship)
         return relationships
