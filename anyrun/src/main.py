@@ -169,9 +169,13 @@ class Anyrun:
                     self.helper.log_info(f"Connector last ran at: {last_seen} (UTC)")
                 else:
                     self.helper.log_info("Connector has never run")
-
-                if not os.path.exists(self.deduplication_folder):
-                    os.makedirs(self.deduplication_folder)
+                if self.deduplication:
+                    if not os.path.exists(self.deduplication_folder):
+                        os.makedirs(self.deduplication_folder)
+                    # TODO: Implement deduplication
+                    # READ Duplication JSON
+                    # Compare with current IOCs
+                    # Write new IOCs to JSON
                 # Read indicators from last run if they exist
                 filename = self.deduplication_folder + "/" + self.deduplication_file
                 old_indicators = []
