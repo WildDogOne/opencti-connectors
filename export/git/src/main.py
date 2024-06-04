@@ -246,9 +246,7 @@ class ExportGit:
                     for y in x["objectMarking"]:
                         if "definition" in y:
                             if (
-                                y["definition"] == "TLP:GREEN"
-                                or y["definition"] == "TLP:CLEAR"
-                                # or y["definition"] == "PAP:GREEN"
+                                y["definition"] == "TLP:CLEAR"
                                 # or y["definition"] == "PAP:CLEAR"
                             ):
                                 output.append(x)
